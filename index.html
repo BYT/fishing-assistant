@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<link rel="manifest" href="/manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="钓鱼助手">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="theme-color" content="#1a2030">
+<title>钓鱼助手</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:#0f1420;color:#e8ecf4;max-width:520px;margin:0 auto;min-height:100vh;padding-bottom:64px}
+.hd{position:sticky;top:0;z-index:20;background:linear-gradient(135deg,#1a2030,#16283a);padding:14px 16px 10px;border-bottom:1px solid rgba(255,255,255,.08)}
+.hd h1{font-size:17px;font-weight:700;display:flex;align-items:center;gap:8px}
+.hd .sub{font-size:11px;color:#8fa3c0;margin-top:3px;display:flex;justify-content:space-between;align-items:center}
+.pill{background:rgba(82,196,26,.15);color:#7be08a;border:1px solid rgba(82,196,26,.35);border-radius:999px;padding:2px 9px;font-size:10px}
+.weather{background:linear-gradient(135deg,#1b2a44,#13303a);border-radius:16px;margin:12px;padding:16px;position:relative;overflow:hidden}
+.weather .temp{font-size:46px;font-weight:800;letter-spacing:-1px}
+.weather .temp small{font-size:14px;color:#8fa3c0;font-weight:400}
+.weather .meta{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:10px;font-size:12px;color:#b9c8de}
+.weather .meta b{color:#fff;font-weight:600}
+.warn{background:linear-gradient(135deg,#3a2b1b,#4a3018);border:1px solid rgba(250,173,20,.4);border-radius:12px;margin:0 12px 12px;padding:10px 14px;font-size:12px;color:#ffd591}
+.tabs{position:sticky;top:86px;z-index:15;display:flex;background:#141b2c;border-bottom:1px solid rgba(255,255,255,.08);overflow-x:auto}
+.tabs div{flex:1;min-width:64px;text-align:center;padding:11px 4px;font-size:13px;color:#8fa3c0;border-bottom:2px solid transparent;white-space:nowrap;cursor:pointer}
+.tabs div.on{color:#6fd6e0;border-bottom-color:#6fd6e0;font-weight:600}
+.page{display:none;padding:12px}
+.page.on{display:block}
+.card{background:#181f31;border-radius:14px;padding:14px;margin-bottom:12px}
+.card h3{font-size:14px;color:#6fd6e0;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.card .body{font-size:13px;line-height:1.65;color:#d6deeb}
+.badge{display:inline-block;background:rgba(111,214,224,.15);color:#6fd6e0;border-radius:6px;padding:1px 7px;font-size:11px;margin-right:6px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.g3{background:#181f31;border-radius:12px;padding:12px 8px;text-align:center}
+.g3 .v{font-size:20px;font-weight:700;color:#6fd6e0}
+.g3 .k{font-size:11px;color:#8fa3c0;margin-top:3px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+td,th{padding:7px 6px;border-bottom:1px solid rgba(255,255,255,.06);text-align:left;color:#c6d2e4}
+th{color:#8fa3c0;font-weight:500}
+.btn{display:block;width:100%;background:#1f3a4d;color:#6fd6e0;border:1px solid rgba(111,214,224,.3);border-radius:10px;padding:10px;font-size:14px;cursor:pointer}
+.method{border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:12px;margin-bottom:10px;background:#181f31;cursor:pointer}
+.method.on{border-color:#6fd6e0;background:#1b2a3d}
+.method .n{font-size:14px;font-weight:600;display:flex;justify-content:space-between;align-items:center}
+.method .t{font-size:10px;color:#8fa3c0;margin-top:2px}
+.method .d{font-size:12px;color:#b9c8de;margin-top:6px;line-height:1.6}
+.steps{background:#181f31;border-radius:12px;padding:12px;margin-top:10px}
+.steps ol{margin-left:18px;font-size:13px;color:#d6deeb;line-height:1.9}
+.foot{position:fixed;bottom:0;left:0;right:0;max-width:520px;margin:0 auto;background:#141b2c;border-top:1px solid rgba(255,255,255,.08);display:flex;z-index:20}
+.foot span{flex:1;text-align:center;padding:9px 2px;font-size:11px;color:#8fa3c0;cursor:pointer}
+.foot span.on{color:#6fd6e0;font-weight:600}
+iframe{width:100%;height:calc(100vh - 180px);border:0;border-radius:14px;background:#fff}
+.note{font-size:11px;color:#6b7d99;margin-top:6px;line-height:1.5}
+svg{width:100%;height:auto;display:block}
+.legend{display:flex;gap:14px;font-size:11px;color:#b9c8de;margin-top:8px;flex-wrap:wrap}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+.low{color:#8fa3c0;font-size:11px}
+</style>
+</head>
+<body>
+<div class="hd">
+  <h1>🎣 钓鱼助手 <span class="pill" id="jqpill">节气…</span></h1>
+  <div class="sub"><span id="citybar" style="cursor:pointer;display:inline-block;padding:10px 10px;margin:-10px -10px -10px 0;border-radius:8px">郑州 · 加载中… ▾</span><span id="netbar" style="font-size:10px;color:#6b7d99"></span><span id="wtime" style="font-size:10px;color:#6b7d99"></span></div>
+</div>
+
+<div class="weather" id="wxcard">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start">
+    <div><div class="temp" id="wtemp">--<small>℃</small></div>
+      <div style="font-size:13px;color:#b9c8de" id="wwea">--</div></div>
+    <div style="text-align:right;font-size:13px" id="wrange">--</div>
+  </div>
+  <div class="meta" id="wmeta">--</div>
+</div>
+<div class="warn" id="walarm" style="display:none"></div>
+
+<div id="citymask" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.65);z-index:50;padding:40px 16px 16px">
+<div style="background:#181f31;border-radius:14px;padding:14px;max-width:520px;margin:0 auto">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><b style="color:#6fd6e0">选择城市</b><span onclick="closeCity()" style="cursor:pointer;color:#8fa3c0;padding:6px 10px">✕ 关闭</span></div>
+<input id="citykw" placeholder="输入城市名搜索，如：郑州 / 洛阳 / 北京" style="width:100%;padding:11px;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:#0f1420;color:#e8ecf4;font-size:14px;box-sizing:border-box">
+<div id="citylist" style="margin-top:10px;max-height:58vh;overflow-y:auto;-webkit-overflow-scrolling:touch"></div>
+</div></div>
+<div class="tabs" id="tabs">
+  <div data-p="fish" class="on">鱼情</div>
+  <div data-p="jieqi">节气</div>
+  <div data-p="tiao">调漂</div>
+  <div data-p="bait">开饵</div>
+</div>
+
+<div class="page on" id="p-fish">
+  <div class="note" style="margin:0 0 10px">📡 鱼情判断已按 <b style="color:#6fd6e0">实时气压 / 湿度 / 风力 / 水温</b> 动态调整，直连气象数据，每 15 分钟自动刷新</div>
+  <div class="grid3">
+    <div class="g3"><div class="v" id="fP">--</div><div class="k">气压 hPa</div></div>
+    <div class="g3"><div class="v" id="fH">--</div><div class="k">湿度 %</div></div>
+    <div class="g3"><div class="v" id="fW">--</div><div class="k">风力</div></div>
+  </div>
+  <div class="card"><h3>① 气压判断</h3><div class="body" id="cP">加载中…</div></div>
+  <div class="card"><h3>② 湿度判断</h3><div class="body" id="cH">加载中…</div></div>
+  <div class="card"><h3>③ 风力判断</h3><div class="body" id="cW">加载中…</div></div>
+  <div class="card"><h3>④ 贾鲁河三层溶解氧（模型估算，非实测）</h3>
+    <div class="body" id="cDO">--</div>
+    <div class="note">估算依据：水温↔饱和溶解氧物理关系；上层=饱和值92-97%，中层=78-85%，下层=64-74%。凌晨3-4点接近全天最低，下层可能跌破地表水Ⅲ类下限5mg/L。</div>
+  </div>
+  <div class="card"><h3>⑤ 鲤鲫水层（当前 + 提前2小时预测）</h3>
+    <div id="layer_svg"></div>
+    <div class="legend"><span><span class="dot" style="background:#f59e0b"></span>鲤鱼（对缺氧更敏感，先上浮）</span><span><span class="dot" style="background:#9aa5b5"></span>鲫鱼（耐低氧更强，上浮更晚）</span></div>
+    <div class="note">鱼层已按 气压/湿度/下层溶解氧 动态修正（0=水面，1=水底）· 示意</div>
+  </div>
+  <div class="card"><h3>⑥ 未来3天鱼情预判</h3><div class="body" id="c3d">--</div></div>
+</div>
+
+<div class="page" id="p-jieqi">
+  <div class="card"><h3>当前节气</h3><div class="body" id="jq_main">--</div></div>
+  <div class="card"><h3>🎯 今日钓法建议</h3><div class="body" id="jq_tips">--</div></div>
+  <div class="card"><h3>🍂 饵料随季节时令 · 提前推荐</h3><div class="body" id="jq_bait">--</div></div>
+  <div class="card"><h3>🧾 固定开饵单（果酸甜腥）</h3><div class="body" id="bait_main">--</div></div>
+</div>
+
+<div class="page" id="p-tiao">
+  <div class="card"><h3>选择调漂方法（看入水状态）</h3><div id="method_list"></div></div>
+  <div class="card"><h3>入水状态示意</h3><div id="draw_svg"></div><div class="note" id="draw_desc">选择方法后显示</div></div>
+  <div class="steps"><h3 style="font-size:13px;color:#6fd6e0;margin-bottom:6px">调漂四步</h3><ol id="steps_ol"></ol></div>
+</div>
+
+<div class="page" id="p-bait">
+  <div class="card"><h3>🧾 六套固定开饵单（不空军打底 ≥60%）</h3><div id="bait_plans"></div></div>
+  <div class="card"><h3>配方详情</h3><div class="body" id="bait_full">--</div></div>
+  <div class="card"><h3>成品状态要求</h3><div class="body" id="bait_state">--</div></div>
+  <div class="card"><h3>季节微调</h3><div class="body" id="bait_adj">--</div></div>
+  <div class="note">🔁 点上方任意方案切换配方；乳猪饲料/螺鲤需先温水泡开再拌。</div>
+</div>
+
+
+<div class="foot">
+  <span data-p="fish" class="on">🐟 鱼情</span>
+  <span data-p="jieqi">🍂 节气</span>
+  <span data-p="tiao">🎛️ 调漂</span>
+  <span data-p="bait">🧾 开饵</span>
+</div>
+
+<script>
+var CITY = "郑州";
+try{var _c=localStorage.getItem("fa_city");if(_c)CITY=_c;}catch(e){}
+var CITIES=[{name:'郑州',lat:34.7466,lon:113.6254},{name:'洛阳',lat:34.6181,lon:112.4540},{name:'开封',lat:34.7973,lon:114.3076},{name:'新乡',lat:35.3030,lon:113.9268},{name:'南阳',lat:32.9908,lon:112.5283},{name:'许昌',lat:34.0357,lon:113.8520},{name:'焦作',lat:35.2159,lon:113.2418},{name:'平顶山',lat:33.7662,lon:113.1926},{name:'安阳',lat:36.0984,lon:114.3924},{name:'漯河',lat:33.5815,lon:114.0165},{name:'信阳',lat:32.1471,lon:114.0913},{name:'周口',lat:33.6261,lon:114.6969},{name:'商丘',lat:34.4143,lon:115.6563},{name:'驻马店',lat:33.0114,lon:114.0223},{name:'三门峡',lat:34.7728,lon:111.2003},{name:'濮阳',lat:35.7618,lon:115.0292},{name:'鹤壁',lat:35.7482,lon:114.2974},{name:'济源',lat:35.0906,lon:112.6023},{name:'巩义',lat:34.7478,lon:113.0220},{name:'登封',lat:34.4536,lon:113.0503},{name:'北京',lat:39.9042,lon:116.4074},{name:'上海',lat:31.2304,lon:121.4737},{name:'广州',lat:23.1291,lon:113.2644},{name:'深圳',lat:22.5431,lon:114.0579},{name:'天津',lat:39.0842,lon:117.2010},{name:'重庆',lat:29.5630,lon:106.5516},{name:'成都',lat:30.5728,lon:104.0668},{name:'武汉',lat:30.5928,lon:114.3055},{name:'西安',lat:34.3416,lon:108.9398},{name:'南京',lat:32.0603,lon:118.7969},{name:'杭州',lat:30.2741,lon:120.1551},{name:'苏州',lat:31.2989,lon:120.5853},{name:'青岛',lat:36.0671,lon:120.3826},{name:'济南',lat:36.6512,lon:117.1201},{name:'合肥',lat:31.8206,lon:117.2272},{name:'长沙',lat:28.2282,lon:112.9388},{name:'南昌',lat:28.6820,lon:115.8579},{name:'福州',lat:26.0745,lon:119.2965},{name:'厦门',lat:24.4798,lon:118.0894},{name:'昆明',lat:25.0389,lon:102.7183},{name:'贵阳',lat:26.6470,lon:106.6302},{name:'南宁',lat:22.8170,lon:108.3665},{name:'海口',lat:20.0440,lon:110.1999},{name:'三亚',lat:18.2528,lon:109.5119},{name:'太原',lat:37.8706,lon:112.5489},{name:'石家庄',lat:38.0428,lon:114.5149},{name:'呼和浩特',lat:40.8424,lon:111.7490},{name:'沈阳',lat:41.8057,lon:123.4315},{name:'大连',lat:38.9140,lon:121.6147},{name:'长春',lat:43.8171,lon:125.3235},{name:'哈尔滨',lat:45.8038,lon:126.5349},{name:'兰州',lat:36.0611,lon:103.8343},{name:'西宁',lat:36.6171,lon:101.7782},{name:'银川',lat:38.4872,lon:106.2309},{name:'乌鲁木齐',lat:43.8256,lon:87.6168},{name:'拉萨',lat:29.6520,lon:91.1721},{name:'香港',lat:22.3193,lon:114.1694},{name:'澳门',lat:22.1987,lon:113.5439},{name:'台北',lat:25.0330,lon:121.5654}];
+var SLOTS = [
+  ["深夜 00-03", .45, .55, "夜钓深水守底，中下层栖息"],
+  ["凌晨 03-06", .60, .70, "全天溶氧最低前，贴底蓄力"],
+  ["清晨 06-09", .20, .25, "觅食高峰，近岸浅水开口最旺"],
+  ["上午 09-12", .40, .50, "阳光渐强，回深处中层"],
+  ["午后 12-15", .80, .90, "高温贴底避光，口稀守底"],
+  ["下午 15-18", .50, .60, "温度回落活性回升，中下层"],
+  ["傍晚 18-21", .25, .30, "觅食高峰，近岸中上层活跃"],
+  ["夜晚 21-24", .35, .45, "夜钓黄金期，钓近中层"]
+];
+var JIEQI = {
+ "立春":["早春·鱼刚复苏","腥为主，蛋白需求高","红虫/蚯蚓主力，商品饵腥香","钓深水·向阳浅滩","鲫15cm短子线，守鲤40cm"],
+ "雨水":["早春·回暖","腥香，活性渐增","红虫/蚯蚓，腥饵为主","深浅交界·回湾","鲫15cm，鲤40cm"],
+ "惊蛰":["仲春·鱼活跃","腥香均衡","红虫/蚯蚓/腥香商品饵","近岸浅水·水草边","鲫15cm，鲤40cm"],
+ "春分":["仲春·开口旺","腥香、偏香","腥香饵，蚯蚓可用","浅滩·水草区","鲫15-20cm，鲤40cm"],
+ "清明":["晚春·黄金期","香为主微腥","谷物香+腥，嫩玉米可用","深浅皆可·水草边","鲫15-20cm，鲤40cm"],
+ "谷雨":["晚春·产卵后狂口","香腥、谷物香","香饵为主，玉米麦粒","深浅交界·回湾","鲫20cm，鲤40cm"],
+ "立夏":["初夏·高温初现","清淡、谷物香","本味/清淡饵，玉米粒","早晚浅·白天深","鲫15cm，鲤40cm"],
+ "小满":["初夏·闷热初现","清淡微甜","清淡饵，果酸甜微调","早晚浅·午后深","鲫15cm，鲤40cm"],
+ "芒种":["仲夏·高温","清淡、果酸开胃","本味饵+果酸，玉米粒","钓深水·阴凉处","鲫15cm，鲤40cm"],
+ "夏至":["盛夏·鱼难钓","清淡、果酸甜","清淡+果酸甜，夜钓活饵","深水·早晚钓近","鲫15cm，鲤40cm"],
+ "小暑":["盛夏·闷热","果酸甜、清淡","果酸甜饵，嫩玉米","深水·夜钓近岸","鲫15cm，鲤40cm"],
+ "大暑":["盛夏·最闷热","清淡、果酸开胃","果酸甜+清淡，玉米粒","钓深·夜钓为主","鲫15cm，鲤40cm"],
+ "立秋":["初秋·暑气渐消","谷物香+微腥","谷物香为主，玉米麦粒","早晚浅·午间深","鲫15cm，鲤40cm"],
+ "处暑":["初秋·过渡期","腥香过渡+谷物香","腥香过渡饵，蚯蚓红虫","早晚近岸浅水·午后远深水","鲫15cm，鲤40cm"],
+ "白露":["仲秋·黄金季","腥香主流，高蛋白","腥香饵，蚯蚓红虫主力","早晚浅边·夜钓近岸","鲫15cm，鲤40cm"],
+ "秋分":["仲秋·鱼口旺","腥香、谷物香","腥香+谷物，活饵好使","深浅都行·贴草边","鲫15-20cm，鲤40cm"],
+ "寒露":["深秋·鱼群集中","腥香、高蛋白","腥饵为主，红虫蚯蚓","深水·回湾","鲫15cm，鲤40cm"],
+ "霜降":["深秋·温差大","腥为主","浓腥饵，红虫蚯蚓","深水·向阳","鲫15cm，鲤40cm"],
+ "立冬":["初冬·鱼口弱","浓腥、活饵","红虫/蚯蚓，浓腥饵","深水·向阳","鲫15cm，鲤40cm"],
+ "小雪":["初冬·鱼难钓","浓腥、活饵","红虫主力，浓腥饵","深水·桥墩","鲫15cm，鲤40cm"],
+ "大雪":["隆冬·鱼口极弱","活饵、高蛋白","红虫/蚯蚓，腥饵","深水·背风向阳","鲫15cm，鲤40cm"],
+ "冬至":["隆冬·最冷","活饵为主","红虫/蚯蚓","深水·桥墩下","鲫15cm，鲤40cm"],
+ "小寒":["隆冬·严寒","活饵","红虫/蚯蚓","深水·冰钓","鲫15cm，鲤40cm"],
+ "大寒":["隆冬·尾声","活饵、腥","红虫/蚯蚓，腥饵","深水·向阳","鲫15cm，鲤40cm"]
+};
+var BAITS=[
+ {n:"① 标准果酸甜腥",s:"全天候野钓 · 白露白天主推",f:"不空军60% + 虾粉15% + 九一八10% + 拉丝粉10% + 冰糖5%（温水化开）+ 苹果醋3-5滴",w:"总水量≈饵重0.9倍",u:"腥香+果酸甜，广谱诱鱼鲫鲤通杀；静置3-5分钟醒饵，收拢成团轻打排气",st:"柔软蓬松 / 微粘不瘫 / 能拉能搓 / 中速雾化",ad:"白露前按此单执行；白露后虾粉加到15-20g、苹果醋减半；夜钓/天冷可加红虫粉10g"},
+ {n:"② 守大鲤/大板鲫",s:"深水贴底 · 薯香螺腥",f:"不空军60% + 螺鲤15% + 红薯甜液5ml + 虾粉10% + 拉丝粉5%",w:"总水量≈饵重0.8倍（甜液计入水量，少加5ml水）",u:"螺鲤先温水泡10分钟再拌；薯香螺腥大颗粒守底，白露后秋季鲤口主攻",st:"偏干散搓饵 / 粘而不死 / 入水缓慢散落",ad:"可加少量红糖增甜；小鱼闹窝时螺鲤减半"},
+ {n:"③ 小鲫快鱼连竿",s:"近岸浅水 · 麦香酒米",f:"不空军60% + 蓝鲫青春版20% + 拉小米10% + 拉丝粉5% + 苹果醋2滴",w:"总水量≈饵重0.95倍",u:"拉小米留窝持久、雾化快，小鲫连竿；拉饵为主",st:"柔软蓬松 / 拉饵圆润 / 入水30-40秒散落",ad:"拉小米不超15%；口快少揉、口慢多打几竿"},
+ {n:"④ 闷热低压救场",s:"气压<1005 / 鱼口差",f:"不空军70% + 九一八15% + 虾粉5% + 拉丝粉5% + 苹果醋6-8滴",w:"总水量≈饵重0.85倍",u:"果酸开胃、减腥防燥，低压闷热天救口",st:"微粘不瘫 / 搓拉皆可 / 雾化中速",ad:"苹果醋勿超8滴；可加两滴蜂蜜增甜"},
+ {n:"⑤ 夜钓/降温加腥",s:"18点后 / 雨后",f:"不空军55% + 螺鲤15% + 虾粉20% + 九一八5% + 拉丝粉5%",w:"总水量≈饵重0.9倍",u:"高蛋白浓腥，夜钓大板鲫、降温天开口",st:"柔软蓬松 / 腥香浓 / 雾化中速",ad:"天冷可再加红虫粉10g"},
+ {n:"⑥ 大物糗钓（乳猪饲料）",s:"守大鲤/草鱼 · 白露后黄金",f:"不空军55% + 乳猪饲料20% + 螺鲤15% + 红薯甜液5ml + 拉丝粉5%",w:"总水量≈饵重0.8倍",u:"乳猪饲料+螺鲤各温水泡开5-10分钟再拌；发酵腥香+薯甜颗粒留窝",st:"粘而不死 / 大颗粒明显 / 缓慢雾化",ad:"乳猪饲料不超20-25%；小鱼闹窝减到10%；可挂钩搓大饵守底"}
+];
+var selBait=0;
+function renderBaitPlans(){
+ var box=document.getElementById("bait_plans");if(!box)return;box.innerHTML="";
+ BAITS.forEach(function(b,i){
+  var d=document.createElement("div");d.className="method"+(i===selBait?" on":"");
+  d.innerHTML="<div class=\'n\'><span>"+b.n+"</span><span class=\'t\'>"+b.s+"</span></div>";
+  (function(k){d.addEventListener("click",function(){selBait=k;renderBaitPlans();renderBaitAll()})})(i);
+  box.appendChild(d);
+ });
+}
+function renderBaitAll(){
+ var b=BAITS[selBait];
+ document.getElementById("bait_full").innerHTML="🧪 配方：<b>"+b.f+"</b><br>💧 "+b.w+"<br><br>🎯 用法："+b.u;
+ document.getElementById("bait_state").textContent=b.st;
+ document.getElementById("bait_adj").textContent=b.ad;
+}
+function renderBaitDaily(name){
+ var t="当前 <b>"+name+"</b> 段：以<b>不空军为底（≥60%）</b>。";
+ if(name==="白露")t+="<br>今日主推：白天 <b>①标准果酸甜腥</b>；守大物 <b>⑥乳猪饲料+螺鲤</b> 或 <b>②薯香螺腥</b>；夜钓 <b>⑤加腥</b>。";
+ else if(name==="秋分"||name==="寒露"||name==="霜降")t+="<br>今日主推：<b>⑤夜钓加腥</b> 与 <b>⑥大物糗钓</b> 为主，虾粉增量、螺鲤常备。";
+ else if(name==="立夏"||name==="小满"||name==="芒种"||name==="夏至"||name==="小暑"||name==="大暑")t+="<br>今日主推：<b>④闷热救场（果酸）</b> + <b>③小鲫快鱼</b>，清淡为主，慎用乳猪饲料。";
+ else t+="<br>今日主推：<b>①标准果酸甜腥</b>，全天候稳妥。";
+ t+="<br><br>👇 点「开饵」页可切换查看 6 套完整配方、水比与状态。";
+ return t;
+}
+var METHODS=[
+ {n:"调四钓二",t:"竞技·经典台钓",d:"空钩半水调四目钓二目，灵敏度高信号清晰，竞技野钓通杀。适合鲫鱼、罗非、鳊鱼，水深1-3.5米。",l:"调4目钓2目",e:2,s:"one",h:"一钩轻触底·一钩悬浮（钓灵）"},
+ {n:"调平水钓二目",t:"野钓·新手首选",d:"调漂尖平水钓二目，稳定可靠不受水流干扰，鲤鲫草通杀，水深1-5米。",l:"调平水钓2目",e:2,s:"flat",h:"双钩躺底·子线弯曲（钓钝）"},
+ {n:"黑坑糗鱼调法",t:"黑坑·专克老鱼",d:"调低目钓高目，减少假信号，专克滑口回锅鱼，水深1.5-3米。",l:"调低目钓3-4目",e:3,s:"flat",h:"双钩躺底·子线弯曲（过滤假信号）"},
+ {n:"梅州钓法",t:"野钓·防走水",d:"极短子线或朝天钩，调平水钓平水/一目，铅坠轻触底，大板鲫利器，水深1-3米。",l:"调平水钓1目",e:1,s:"zhui",h:"铅坠轻触底·极短子线"},
+ {n:"调五钓三",t:"竞技·抢鱼快",d:"调五目钓三目，灵敏度更高，适合鱼口快、竞技抢鱼，水深1-3米。",l:"调5目钓3目",e:3,s:"one",h:"一钩触底·一钩悬浮（钓灵）"},
+ {n:"调三钓一",t:"黑坑·轻口",d:"调三目钓一目，偏灵，适合生口抢食、轻口鲫鱼，水深1-2.5米。",l:"调3目钓1目",e:1,s:"one",h:"一钩触底·一钩悬浮（钓灵）"}
+];
+var ZD=["挂重铅（大于浮漂浮力）","抛竿入水，浮漂完全没入水中","上推浮漂，直到漂尖露出水面","此时铅坠触底，水深已找到","重复抛投验证：每次漂尖刚好露出一目"];
+var TM=["下拉浮漂（漂座到铅坠距离 = 子线长度 + 20cm）","剪铅皮，逐步减铅使漂尖露出目标目数（如4目）","每次少量剪铅，宁少勿多","抛竿验证：半水状态下漂目稳定为目标目数","调目完成，准备钓目"];
+var DM=["挂饵上钩（拉饵/搓饵）","上推浮漂，抛竿入水","观察漂目，逐步调整至钓目（如2目）","验证：饵料到底后漂目稳定为目标钓目","微调：有口不中鱼上推（钓钝），无口拉漂（钓灵）"];
+var TAB="fish", selM=0;
+function openCity(){document.getElementById("citymask").style.display="block";var kw=document.getElementById("citykw");kw.value="";renderCities();setTimeout(function(){kw.focus()},80);}
+function closeCity(){document.getElementById("citymask").style.display="none";}
+function renderCities(){
+  var kw=document.getElementById("citykw").value.trim();
+  var list=CITIES.filter(function(c){return c.name.indexOf(kw)>=0});
+  var box=document.getElementById("citylist");
+  box.innerHTML="";
+  if(!list.length){var e=document.createElement("div");e.style.cssText="color:#8fa3c0;font-size:13px;padding:8px";e.textContent="未找到城市，试试完整名称";box.appendChild(e);return;}
+  for(var i=0;i<list.length&&i<80;i++){
+    var c=list[i];
+    var d=document.createElement("div");
+    d.style.cssText="padding:12px 8px;border-bottom:1px solid rgba(255,255,255,.06);font-size:14px;color:#d6deeb;cursor:pointer";
+    d.textContent=c.name;
+    (function(n){d.addEventListener("click",function(){pickCity(n)})})(c.name);
+    box.appendChild(d);
+  }
+}
+function pickCity(n){CITY=n;try{localStorage.setItem("fa_city",n)}catch(e){}closeCity();loadWeather(CITY);}
+document.getElementById("citykw").addEventListener("input",renderCities);
+document.getElementById("citybar").addEventListener("click",openCity);
+
+function pa(p){return p>=1025?"高压（≥1025hPa）·鱼口活跃，贴底觅食，钓底最佳":p>=1010?"正常气压（1010-1025hPa）·鱼情正常，钓底为主":p>=1000?"偏低（1000-1010hPa）·活性下降，可钓离底10-20cm":"低压（<1000hPa）·缺氧闷热，鲤鲫离底上浮，钓离底30-50cm或半水"}
+function ha(h){return h>=95?"极高湿(≥95%)·空气接近饱和，多伴降雨/浓雾，气压低闷缺氧，鲤鲫易离底上浮、口弱，建议钓离底或浅边活水增氧区":h>=85?"高湿(85-95%)·多为雨前/雨后，闷热溶氧偏低，鱼易上浮，钓浅边/活水口，饵用清淡果酸甜":h>=70?"湿度适中偏湿(70-85%)·空气湿润、气压平稳，鱼活性正常，全天可钓，优先下风口，饵用腥香":h>=50?"湿度适中(50-70%)·干湿平衡、气压稳定，鲤鲫贴底活性好，正常钓底":h>=30?"低湿(30-50%)·空气干燥，多北风晴冷天，表层水温波动大，鱼口偏慢，宜钓深水贴底":"极干燥(<30%)·多连晴大风，建议钓深水/活水，饵用香腥加重"}
+function wa(lv){return lv<=1?"微风/无风·复氧弱，闷热天鱼易上浮":lv<=3?"2-4级风最佳·天然增氧机，下风口溶氧高，钓下风口":lv<=5?"5级风·鱼退深水，钓背风深水区":"大风·不宜出钓，注意安全"}
+function windNum(s){if(!s)return 0;var m=String(s).match(/([0-9]+)/);return m?parseInt(m[1]):0}
+function doEst(t){var sat=14.652-0.41022*t+0.007991*t*t-0.000077774*t*t*t;if(sat<0)sat=0;var c=t<28;return {up:(sat*(c?0.95:0.92)).toFixed(1),mid:(sat*(c?0.82:0.78)).toFixed(1),low:(sat*(c?0.70:0.64)).toFixed(1)}}
+function layerAdjust(li,ji,p,h,dol){var s=0;if(p<1000)s-=0.22;else if(p<1005)s-=0.10;else if(p>=1025)s+=0.08;if(h>=90)s-=0.10;else if(h>=85)s-=0.05;else if(h<40)s+=0.05;if(dol!=null){if(dol<5)s-=0.12;else if(dol<6)s-=0.06}li=Math.max(.08,Math.min(.95,li+s*1.2));ji=Math.max(.08,Math.min(.95,ji+s*0.8));return [li,ji]}
+function slotAt(h){return SLOTS[Math.floor(h/3)%8]}
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+function fmt(x){return x==null?"--":x}
+
+function wmo2zh(c){c=parseInt(c);var m={0:'晴',1:'多云',2:'多云',3:'阴',45:'雾',48:'雾',51:'毛毛雨',53:'毛毛雨',55:'小雨',56:'冻雨',57:'冻雨',61:'小雨',63:'中雨',65:'大雨',66:'冻雨',67:'冻雨',71:'小雪',73:'中雪',75:'大雪',77:'雪粒',80:'阵雨',81:'阵雨',82:'强阵雨',85:'阵雪',86:'阵雪',95:'雷阵雨',96:'雷暴',99:'雷暴'};return m[c]||'阴';}
+function windLevel(ms){ms=Number(ms)||0;var t=[0.3,1.6,3.4,5.5,8.0,10.8,13.9,17.2,20.8,24.5,28.5,32.7];for(var i=0;i<t.length;i++){if(ms<t[i])return i}return 12}
+function windDir(deg){deg=Number(deg)||0;var a=['北','东北','东','东南','南','西南','西','西北'];return a[Math.round(deg/45)%8]+'风'}
+var TERMS=["小寒","大寒","立春","雨水","惊蛰","春分","清明","谷雨","立夏","小满","芒种","夏至","小暑","大暑","立秋","处暑","白露","秋分","寒露","霜降","立冬","小雪","大雪","冬至"];
+var SINF=[0,21208,42467,63836,85337,107014,128867,150921,173149,195551,218072,240693,263343,285989,308563,331033,353350,375494,397447,419210,440795,462224,483532,504758];
+function termDate(y,n){var d=new Date((31556925974.7*(y-1900)+SINF[n]*60000)+Date.UTC(1900,0,6,2,5));return new Date(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate())}
+function jsJieqi(now){
+  var y=now.getFullYear(),i,list=[];
+  for(i=0;i<24;i++)list.push(termDate(y,i));
+  for(i=0;i<23;i++){if(now>=list[i]&&now<list[i+1]){return {name:TERMS[i],next:TERMS[i+1],next_days:Math.max(0,Math.ceil((list[i+1]-now)/86400000))}}}
+  if(now<list[0]){var pt=termDate(y-1,23);return {name:'冬至',next:'小寒',next_days:Math.max(0,Math.ceil((list[0]-now)/86400000))}}
+  var nt=termDate(y+1,0);return {name:'冬至',next:'小寒',next_days:Math.max(0,Math.ceil((nt-now)/86400000))}
+}
+
+document.getElementById("tabs").addEventListener("click",function(e){var el=e.target.closest("div");if(!el||!el.dataset.p)return;go(el.dataset.p)});
+document.querySelectorAll(".foot span").forEach(function(s){s.addEventListener("click",function(){go(s.dataset.p)})});
+function go(p){TAB=p;document.querySelectorAll(".page").forEach(function(x){x.classList.toggle("on",x.id==="p-"+p)});document.querySelectorAll("#tabs div").forEach(function(x){x.classList.toggle("on",x.dataset.p===p)});document.querySelectorAll(".foot span").forEach(function(x){x.classList.toggle("on",x.dataset.p===p)});}
+
+function drawLayer(li,ji,title,note){
+ var w=160,h=150,pad=26;
+ var s='<div style="text-align:center;font-size:12px;color:#8fa3c0">'+title+'</div>';
+ s+='<svg viewBox="0 0 '+w+' '+h+'"><line x1="'+pad+'" y1="12" x2="'+pad+'" y2="'+(h-16)+'" stroke="#4a5a78" stroke-width="2"/>';
+ s+='<line x1="'+(w-pad)+'" y1="12" x2="'+(w-pad)+'" y2="'+(h-16)+'" stroke="#4a5a78" stroke-width="2"/>';
+ s+='<line x1="'+(pad-4)+'" y1="12" x2="'+(w-pad+4)+'" y2="12" stroke="#3a4760" stroke-width="1"/><text x="'+w/2+'" y="10" font-size="9" fill="#8fa3c0" text-anchor="middle">水面</text>';
+ s+='<line x1="'+(pad-4)+'" y1="'+(h-16)+'" x2="'+(w-pad+4)+'" y2="'+(h-16)+'" stroke="#3a4760" stroke-width="1"/><text x="'+w/2+'" y="'+(h-4)+'" font-size="9" fill="#8fa3c0" text-anchor="middle">水底</text>';
+ var x1=pad+14,x2=w-pad-14;
+ function fish(x,y,color){s+='<circle cx="'+x+'" cy="'+y+'" r="7" fill="'+color+'" stroke="#0f1420" stroke-width="1.5"/><path d="M'+(x+5)+' '+y+'l5 -4 0 8z" fill="'+color+'"/>'}
+ var y1=12+li*(h-16-12),y2=12+ji*(h-16-12);
+ fish(x1,y1,"#f59e0b");fish(x2,y2,"#9aa5b5");
+ s+='<text x="'+x1+'" y="'+(h-6)+'" font-size="9" fill="#f59e0b" text-anchor="middle">鲤</text>';
+ s+='<text x="'+x2+'" y="'+(h-6)+'" font-size="9" fill="#9aa5b5" text-anchor="middle">鲫</text>';
+ s+='</svg><div class="note">'+note+'</div>';
+ return s;
+}
+
+function renderFish(d){
+ var p=parseFloat(d.live&&d.live.pressure), h=parseInt(d.live&&d.live.humidity);
+ var ws=d.live&&d.live.wind_level||"0级", wv=windNum(ws);
+ document.getElementById("fP").textContent=p?Math.round(p):"--";
+ document.getElementById("fH").textContent=h?h:"--";
+ document.getElementById("fW").textContent=ws;
+ document.getElementById("cP").textContent=p?pa(p):"暂无气压数据";
+ document.getElementById("cH").textContent=h!=null&&!isNaN(h)?ha(h):"暂无湿度数据";
+ document.getElementById("cW").textContent=wa(wv);
+ var t=parseFloat(d.live&&d.live.temp);var dox=t?doEst(t):null;
+ document.getElementById("cDO").textContent=dox?("水温约"+Math.round(t)+"℃ → 上层DO≈"+dox.up+"mg/L · 中层≈"+dox.mid+"mg/L · 下层≈"+dox.low+"mg/L（白露段河温≈气温，模型估算）"):"无温度数据，无法估算";
+ var now=new Date(), cur=slotAt(now.getHours()), fut=slotAt((now.getHours()+2)%24);
+ var dol=dox?parseFloat(dox.low):null;
+ var lc=layerAdjust(cur[1],cur[2],p||1010,h!=null?h:60,dol);
+ var lf=layerAdjust(fut[1],fut[2],p||1010,h!=null?h:60,dol);
+ var lc2=layerAdjust(fut[1],fut[2],p||1010,h!=null?h:60,dol);
+ document.getElementById("layer_svg").innerHTML=
+   '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+   '<div style="flex:1 1 140px">'+drawLayer(lc[0],lc[1],"当前 · "+cur[0],cur[3])+'</div>'+
+   '<div style="flex:1 1 140px">'+drawLayer(lc2[0],lc2[1],"预测 · "+fut[0],fut[3]+"（提前2小时）")+'</div></div>';
+ var f3=d.days3||[];
+ document.getElementById("c3d").innerHTML=f3.length?f3.map(function(x){
+   var tip=[];var hi=parseFloat(x.high),lo=parseFloat(x.low);
+   if(hi-lo>=10)tip.push("温差大，早晚口好");else if(hi-lo>=6)tip.push("温差适中全天可钓");else tip.push("温差小，钓早晚或夜钓");
+   if(String(x.weather).indexOf("雨")>=0||parseFloat(x.rain)>0)tip.push("有雨：增氧降温口好，钓浅边");else tip.push("无雨正常作钓");
+   if(hi>=32)tip.push("高温钓深水/夜钓");else if(hi<=10)tip.push("低温钓深水向阳用活饵");
+   var wn=windNum(x.wind);if(wn>=3&&wn<=4)tip.push("风适中钓下风口");else if(wn>=5)tip.push("风大钓背风深水");
+   return '<table><tr><th>'+x.date+'</th><td>'+esc(x.weather)+'</td><td>'+x.high+'/'+x.low+'℃</td><td>'+esc(x.wind)+'</td></tr><tr><td colspan="4" style="color:#8fa3c0">'+tip.join("；")+'</td></tr></table>';
+ }).join(""):"暂无3天数据";
+}
+
+function renderJieqi(d){
+ var j=d.jieqi||{},name=j.name||"白露",info=JIEQI[name]||["--","--","--","--","--"];
+ document.getElementById("jqpill").textContent=name;
+ document.getElementById("jq_main").innerHTML=
+  "<b style='font-size:16px'>"+name+"</b> · "+info[0]+"<br>"+
+  "距下个节气 <b>"+(j.next||"--")+"</b> 还有 <b style='color:#6fd6e0'>"+((j.next_days!=null)?j.next_days:"--")+"</b> 天";
+ document.getElementById("jq_tips").innerHTML=
+  "🍽️ 适口性："+info[1]+"<br>🎣 推荐饵料："+info[2]+"<br>📍 远近："+info[3]+"<br>🪢 子线："+info[4];
+ var p=parseFloat(d.live&&d.live.pressure)||1010,h=parseInt(d.live&&d.live.humidity)||60,wn=windNum(d.live&&d.live.wind_level);
+ var layer=p>=1025?"高压有风 → 鲤鲫贴底，钓底为主":p<1000||h>=90?"低压闷热/高湿缺氧 → 鱼上浮，钓离底或半水":wn>=2&&wn<=4?"气压平稳+风适中 → 下风口溶氧高，钓底":p<1010?"气压偏低 → 钓离底10-20cm":"正常气压 → 钓底为主";
+ document.getElementById("jq_tips").innerHTML+="<br>🌬️ 气压风力水层："+layer;
+ var nd=j.next_days;
+ document.getElementById("jq_bait").innerHTML= baitFuture(name,nd);
+ document.getElementById("bait_main").innerHTML= renderBaitDaily(name);
+}
+function baitFuture(name,nd){
+ var text="当前 <b>"+name+"</b> 段：以<b>不空军为主饵底（≥60%）</b>，搭配适量状态饵调状态。";
+ if(name==="处暑")text+="<br>📅 距白露约"+nd+"天 → <b>白露后</b>：主攻腥香，虾粉加到15-20g、苹果醋减半，可备蚯蚓红虫；九一八腥香版/红虫粉按比例加入。";
+ else if(name==="白露")text+="<br>📅 距秋分约"+nd+"天 → <b>秋分后</b>：腥香+谷物香均衡，可加嫩玉米粒、麦粒；速攻2号调状态。";
+ else if(name==="秋分")text+="<br>📅 距寒露约"+nd+"天 → <b>寒露后</b>：腥饵为主，红虫蚯蚓当主力，虾粉增量。";
+ else if(name==="立春"||name==="雨水")text+="<br>📅 下个节气前后：持续腥为主，备足红虫蚯蚓。";
+ else if(name==="立夏"||name==="小满"||name==="芒种")text+="<br>📅 下个节气前后：天气更热，转清淡果酸甜，玉米粒备好。";
+ else if(name==="立秋")text+="<br>📅 距处暑"+nd+"天 → <b>处暑后</b>：腥香过渡+谷物香，蚯蚓红虫渐入主力。";
+ else text+="<br>📅 距下个节气约"+nd+"天：关注转节后的饵料方向（主饵仍以不空军为底）。";
+ text+="<br><br>💡 未来搭配预告：九一八腥香版、速攻2号、虾粉、红虫粉、玉米粒、麦粒等按节气节奏提前备好，详见开饵单季节微调。";
+ return text;
+}
+function renderBait(){renderBaitAll();return ""}
+function renderBaitFull(){renderBaitAll();return ""}
+renderBaitPlans();renderBaitAll();
+
+function renderMethods(){
+ var list=document.getElementById("method_list");list.innerHTML="";
+ METHODS.forEach(function(m,i){
+  var d=document.createElement("div");d.className="method"+(i===selM?" on":"");
+  d.innerHTML="<div class='n'><span>"+m.n+"</span><span class='t'>"+m.t+"</span></div><div class='d'>"+m.d+"</div>";
+  d.addEventListener("click",function(){selM=i;renderMethods();renderDraw()});
+  list.appendChild(d);
+ });
+ document.getElementById("steps_ol").innerHTML=ZD.map(function(s){return "<li>"+s+"</li>"}).join("");
+}
+function renderDraw(){
+ var m=METHODS[selM],w=180,h=210;
+ var s='<svg viewBox="0 0 '+w+' '+h+'"><rect x="20" y="20" width="140" height="170" rx="8" fill="none" stroke="#4a5a78"/>';
+ s+='<line x1="20" y1="45" x2="160" y2="45" stroke="#3a4760" stroke-width="1"/><text x="90" y="38" font-size="9" fill="#8fa3c0" text-anchor="middle">水面</text>';
+ s+='<text x="90" y="202" font-size="9" fill="#8fa3c0" text-anchor="middle">水底</text>';
+ var e=m.e*12;
+ s+='<line x1="70" y1="30" x2="70" y2="52" stroke="#c8d6ea" stroke-width="3"/><text x="88" y="36" font-size="10" fill="#e8ecf4">'+e+'目</text>';
+ s+='<rect x="60" y="52" width="20" height="24" rx="3" fill="#6fd6e0"/><text x="70" y="70" font-size="8" fill="#0f1420" text-anchor="middle">漂</text>';
+ s+='<line x1="70" y1="76" x2="70" y2="128" stroke="#c8d6ea" stroke-width="1.5"/>';
+ s+='<circle cx="70" cy="138" r="8" fill="#94d8c3"/><text x="86" y="142" font-size="8" fill="#8fa3c0">铅坠</text>';
+ if(m.s==="zhui"){
+   s+='<line x1="70" y1="146" x2="70" y2="178" stroke="#c8d6ea" stroke-width="1.5"/>';
+   s+='<path d="M58 178 q14 16 28 0" stroke="#e8ecf4" fill="none" stroke-width="2"/>';
+   s+='<text x="104" y="182" font-size="8" fill="#8fa3c0">朝天钩</text>';
+ } else if(m.s==="flat"){
+   s+='<path d="M52 150 q18 26 36 4" stroke="#c8d6ea" fill="none" stroke-width="1.5"/>';
+   s+='<path d="M50 178 q6 10 12 4" stroke="#e8ecf4" fill="none" stroke-width="2"/>';
+   s+='<path d="M84 182 q6 10 12 4" stroke="#e8ecf4" fill="none" stroke-width="2"/>';
+   s+='<text x="104" y="180" font-size="8" fill="#8fa3c0">双钩躺底</text>';
+ } else {
+   s+='<line x1="70" y1="146" x2="70" y2="168" stroke="#c8d6ea" stroke-width="1.5"/>';
+   s+='<path d="M60 168 q10 12 20 0" stroke="#e8ecf4" fill="none" stroke-width="2"/>';
+   s+='<path d="M78 174 q10 12 20 0" stroke="#e8ecf4" fill="none" stroke-width="2"/>';
+   s+='<text x="104" y="170" font-size="8" fill="#8fa3c0">一钩触底一钩悬</text>';
+ }
+ s+='</svg>';
+ document.getElementById("draw_svg").innerHTML=s;
+ document.getElementById("draw_desc").textContent=m.l+" · "+m.h;
+}
+renderMethods();renderDraw();
+
+function loadWeather(city){
+  var c=CITIES.filter(function(x){return x.name===city})[0];
+  if(!c){document.getElementById("cP").textContent="未找到该城市";return}
+  var u="https://api.open-meteo.com/v1/forecast?latitude="+c.lat+"&longitude="+c.lon+
+    "&current=temperature_2m,relative_humidity_2m,apparent_temperature,pressure_msl,wind_speed_10m,wind_direction_10m,weather_code,precipitation"+
+    "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,sunrise,sunset"+
+    "&timezone=auto&forecast_days=7";
+  fetch(u,{cache:"no-store"}).then(function(r){return r.json()}).then(function(x){renderWeather(x,city)})
+  .catch(function(){document.getElementById("cP").textContent="天气数据获取失败，请检查手机网络"});
+}
+function renderWeather(x,city){
+  var cur=x.current||{},day=(x.daily||{});
+  var live={temp:cur.temperature_2m,humidity:cur.relative_humidity_2m,apparent:cur.apparent_temperature,
+    pressure:cur.pressure_msl,wind_dir:windDir(cur.wind_direction_10m),wind_level:windLevel(cur.wind_speed_10m)+"级",
+    rain:cur.precipitation,weather:wmo2zh(cur.weather_code)};
+  var today={high:day.temperature_2m_max?day.temperature_2m_max[0]:null,low:day.temperature_2m_min?day.temperature_2m_min[0]:null,
+    weather:wmo2zh(day.weather_code?day.weather_code[0]:0)};
+  var days3=[];
+  if(day.time)for(var i=0;i<Math.min(3,day.time.length);i++){
+    days3.push({date:day.time[i].slice(5).replace("-","/"),weather:wmo2zh(day.weather_code[i]),
+      high:day.temperature_2m_max[i],low:day.temperature_2m_min[i],
+      rain:day.precipitation_sum?day.precipitation_sum[i]:0,wind:""});
+  }
+  var jq=jsJieqi(new Date());
+  var d={city:city,live:live,today:today,days3:days3,jieqi:jq,alarms:[]};
+  document.getElementById("citybar").textContent=d.city+" · "+jq.name;
+  var l=d.live;
+  document.getElementById("wtemp").innerHTML=(l.temp!=null?Math.round(l.temp):"--")+"<small>℃</small>";
+  document.getElementById("wwea").textContent=(l.weather||"")+" "+((l.wind_dir||"")+" "+(l.wind_level||""));
+  document.getElementById("wrange").textContent=d.today?(d.today.weather+" "+d.today.high+"°/"+(d.today.low||"--")+"°"):"--";
+  var mm=[];
+  mm.push("湿度 <b>"+fmt(l.humidity)+"%</b>");
+  mm.push("气压 <b>"+fmt(l.pressure)+"hPa</b>");
+  mm.push("降雨 <b>"+(l.rain&&l.rain>0?l.rain+"mm":"无")+"</b>");
+  mm.push("温差 <b>"+(d.today?((parseFloat(d.today.high)-parseFloat(d.today.low)).toFixed(0))+"℃":"--")+"</b>");
+  document.getElementById("wmeta").innerHTML=mm.join(" · ");
+  renderFish(d);renderJieqi(d);
+  document.getElementById("netbar").textContent="数据在线";
+  var _t=new Date(),_ts=("0"+_t.getHours()).slice(-2)+":"+("0"+_t.getMinutes()).slice(-2);
+  var w=document.getElementById("wtime");if(w)w.textContent="更新 "+_ts;
+}
+loadWeather(CITY);setInterval(function(){loadWeather(CITY)},900000);
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(){})}
+</script>
+</body>
+</html>
