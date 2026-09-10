@@ -24,9 +24,6 @@ body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;backgr
 .weather .meta{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:10px;font-size:12px;color:#b9c8de}
 .weather .meta b{color:#fff;font-weight:600}
 .warn{background:linear-gradient(135deg,#3a2b1b,#4a3018);border:1px solid rgba(250,173,20,.4);border-radius:12px;margin:0 12px 12px;padding:10px 14px;font-size:12px;color:#ffd591}
-.tabs{position:sticky;top:86px;z-index:15;display:flex;background:#141b2c;border-bottom:1px solid rgba(255,255,255,.08);overflow-x:auto}
-.tabs div{flex:1;min-width:64px;text-align:center;padding:11px 4px;font-size:13px;color:#8fa3c0;border-bottom:2px solid transparent;white-space:nowrap;cursor:pointer}
-.tabs div.on{color:#6fd6e0;border-bottom-color:#6fd6e0;font-weight:600}
 .page{display:none;padding:12px}
 .page.on{display:block}
 .card{background:#181f31;border-radius:14px;padding:14px;margin-bottom:12px}
@@ -49,7 +46,7 @@ th{color:#8fa3c0;font-weight:500}
 .steps{background:#181f31;border-radius:12px;padding:12px;margin-top:10px}
 .steps ol{margin-left:18px;font-size:13px;color:#d6deeb;line-height:1.9}
 .foot{position:fixed;bottom:0;left:0;right:0;max-width:520px;margin:0 auto;background:#141b2c;border-top:1px solid rgba(255,255,255,.08);display:flex;z-index:20}
-.foot span{flex:1;text-align:center;padding:9px 2px;font-size:11px;color:#8fa3c0;cursor:pointer}
+.foot span{flex:1;text-align:center;padding:9px 2px;font-size:13px;color:#8fa3c0;cursor:pointer}
 .foot span.on{color:#6fd6e0;font-weight:600}
 iframe{width:100%;height:calc(100vh - 180px);border:0;border-radius:14px;background:#fff}
 .note{font-size:11px;color:#6b7d99;margin-top:6px;line-height:1.5}
@@ -81,12 +78,6 @@ svg{width:100%;height:auto;display:block}
 <input id="citykw" placeholder="输入城市名搜索，如：郑州 / 洛阳 / 北京" style="width:100%;padding:11px;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:#0f1420;color:#e8ecf4;font-size:14px;box-sizing:border-box">
 <div id="citylist" style="margin-top:10px;max-height:58vh;overflow-y:auto;-webkit-overflow-scrolling:touch"></div>
 </div></div>
-<div class="tabs" id="tabs">
-  <div data-p="fish" class="on">鱼情</div>
-  <div data-p="jieqi">节气</div>
-  <div data-p="tiao">调漂</div>
-  <div data-p="bait">开饵</div>
-</div>
 
 <div class="page on" id="p-fish">
   <div class="note" style="margin:0 0 10px">📡 鱼情判断已按 <b style="color:#6fd6e0">实时气压 / 湿度 / 风力 / 水温</b> 动态调整，直连气象数据，每 15 分钟自动刷新</div>
@@ -124,7 +115,7 @@ svg{width:100%;height:auto;display:block}
 </div>
 
 <div class="page" id="p-bait">
-  <div class="card" style="position:sticky;top:128px;z-index:12;background:#181f31;box-shadow:0 8px 18px rgba(0,0,0,.4)"><h3>🧾 六套固定开饵单（不空军打底 ≥60%）</h3><div id="bait_plans"></div></div>
+  <div class="card" style="position:sticky;top:90px;z-index:12;background:#181f31;box-shadow:0 8px 18px rgba(0,0,0,.4)"><h3>🧾 六套固定开饵单（不空军打底 ≥60%）</h3><div id="bait_plans"></div></div>
   <div class="card"><h3>配方详情</h3><div class="body" id="bait_full">--</div></div>
   <div class="card"><h3>成品状态要求</h3><div class="body" id="bait_state">--</div></div>
   <div class="card"><h3>季节微调</h3><div class="body" id="bait_adj">--</div></div>
@@ -269,9 +260,8 @@ function jsJieqi(now){
   var nt=termDate(y+1,0);return {name:'冬至',next:'小寒',next_days:Math.max(0,Math.ceil((nt-now)/86400000))}
 }
 
-document.getElementById("tabs").addEventListener("click",function(e){var el=e.target.closest("div");if(!el||!el.dataset.p)return;go(el.dataset.p)});
 document.querySelectorAll(".foot span").forEach(function(s){s.addEventListener("click",function(){go(s.dataset.p)})});
-function go(p){TAB=p;document.querySelectorAll(".page").forEach(function(x){x.classList.toggle("on",x.id==="p-"+p)});document.querySelectorAll("#tabs div").forEach(function(x){x.classList.toggle("on",x.dataset.p===p)});document.querySelectorAll(".foot span").forEach(function(x){x.classList.toggle("on",x.dataset.p===p)});}
+function go(p){TAB=p;document.querySelectorAll(".page").forEach(function(x){x.classList.toggle("on",x.id==="p-"+p)});document.querySelectorAll(".foot span").forEach(function(x){x.classList.toggle("on",x.dataset.p===p)});}
 
 function drawLayer(li,ji,title,note){
  var w=160,h=150,pad=26;
