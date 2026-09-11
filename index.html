@@ -111,7 +111,13 @@ svg{width:100%;height:auto;display:block}
 <div class="page" id="p-tiao">
   <div class="card"><h3>选择调漂方法（看入水状态）</h3><div id="method_list"></div></div>
   <div class="card"><h3>入水状态示意</h3><div id="draw_svg"></div><div class="note" id="draw_desc">选择方法后显示</div></div>
-  <div class="steps"><h3 style="font-size:13px;color:#6fd6e0;margin-bottom:6px">调漂四步</h3><ol id="steps_ol"></ol></div>
+  <div class="steps">
+  <h3 style="font-size:13px;color:#6fd6e0;margin:0 0 8px">调漂四步 · 详细流程</h3>
+  <div><h3 style="font-size:12px;color:#8fa3c0;margin:0 0 2px">① 重铅找底（定水深）</h3><ol id="steps_zd"></ol></div>
+  <div><h3 style="font-size:12px;color:#8fa3c0;margin:10px 0 2px">② 半水调目（调灵敏度）</h3><ol id="steps_tm"></ol></div>
+  <div><h3 style="font-size:12px;color:#8fa3c0;margin:10px 0 2px">③ 挂饵找钓目（定饵重状态）</h3><ol id="steps_dm"></ol></div>
+  <div><h3 style="font-size:12px;color:#8fa3c0;margin:10px 0 2px">④ 验证与微调（对口调口）</h3><ol id="steps_vm"></ol></div>
+</div>
 </div>
 
 <div class="page" id="p-bait">
@@ -214,6 +220,7 @@ var METHODS=[
 var ZD=["挂重铅（大于浮漂浮力）","抛竿入水，浮漂完全没入水中","上推浮漂，直到漂尖露出水面","此时铅坠触底，水深已找到","重复抛投验证：每次漂尖刚好露出一目"];
 var TM=["下拉浮漂（漂座到铅坠距离 = 子线长度 + 20cm）","剪铅皮，逐步减铅使漂尖露出目标目数（如4目）","每次少量剪铅，宁少勿多","抛竿验证：半水状态下漂目稳定为目标目数","调目完成，准备钓目"];
 var DM=["挂饵上钩（拉饵/搓饵）","上推浮漂，抛竿入水","观察漂目，逐步调整至钓目（如2目）","验证：饵料到底后漂目稳定为目标钓目","微调：有口不中鱼上推（钓钝），无口拉漂（钓灵）"];
+var VM=["空钩验证：不挂饵再抛一竿，确认半水调目未变（变了则重新剪铅）","挂饵验证：用正常大小的拉/搓饵抛竿，确认漂目稳定在目标钓目","有口不中鱼：上推浮漂1-2目（钓钝），直到顿口清晰、中鱼率高","有中鱼但漂无动作：下拉浮漂1-2目（钓灵），放大信号","走水/风大：换小号漂或加大铅重，改钓钝至平水","小鱼闹窝：上推浮漂钓钝 + 改用大饵团搓饵压底"];
 var TAB="fish", selM=0;
 function openCity(){document.getElementById("citymask").style.display="block";var kw=document.getElementById("citykw");kw.value="";renderCities();setTimeout(function(){kw.focus()},80);}
 function closeCity(){document.getElementById("citymask").style.display="none";}
@@ -352,7 +359,10 @@ function renderMethods(){
   d.addEventListener("click",function(){selM=i;renderMethods();renderDraw()});
   list.appendChild(d);
  });
- document.getElementById("steps_ol").innerHTML=ZD.map(function(s){return "<li>"+s+"</li>"}).join("");
+ document.getElementById("steps_zd").innerHTML=ZD.map(function(s){return "<li>"+s+"</li>"}).join("");
+document.getElementById("steps_tm").innerHTML=TM.map(function(s){return "<li>"+s+"</li>"}).join("");
+document.getElementById("steps_dm").innerHTML=DM.map(function(s){return "<li>"+s+"</li>"}).join("");
+document.getElementById("steps_vm").innerHTML=VM.map(function(s){return "<li>"+s+"</li>"}).join("");
 }
 function drawHook(x,y){return '<path d="M'+x+' '+y+' l9 0 M'+(x+9)+' '+y+' q5 9 -1 12 M'+(x+8)+' '+(y+12)+' l3 -7" stroke="#d8e2f0" fill="none" stroke-width="1.6" stroke-linecap="round"/>'}
 function drawHookUp(x,y){return '<path d="M'+x+' '+y+' l0 10 M'+x+' '+(y+10)+' q-7 2 -6 9 M'+(x-6)+' '+(y+19)+' l7 -4" stroke="#d8e2f0" fill="none" stroke-width="1.6" stroke-linecap="round"/>'}
