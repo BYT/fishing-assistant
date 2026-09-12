@@ -105,9 +105,7 @@ svg{width:100%;height:auto;display:block}
 
 <div class="page" id="p-jieqi">
   <div class="card"><h3>当前节气</h3><div class="body" id="jq_main">--</div></div>
-  <div class="card"><h3>🎯 今日钓法建议</h3><div class="body" id="jq_tips">--</div></div>
   <div class="card"><h3>🍂 饵料随季节时令 · 提前推荐</h3><div class="body" id="jq_bait">--</div></div>
-  <div class="card"><h3>🧾 固定开饵单（果酸甜腥）</h3><div class="body" id="bait_main">--</div></div>
 </div>
 
 <div class="page" id="p-tiao">
@@ -145,13 +143,17 @@ svg{width:100%;height:auto;display:block}
   <div class="card"><h3>📽️ 开饵五步演示（动图）</h3><img src="bait-anim.gif" alt="开饵演示动图" style="width:100%;border-radius:12px;display:block"></div>
   <div class="note">🔁 点上方任意方案切换配方；乳猪饲料/螺鲤需先温水泡开再拌。</div>
 </div>
+<div class="page" id="p-jieqi">
+  <div class="card"><h3>当前节气</h3><div class="body" id="jq_main">--</div></div>
+  <div class="card"><h3>🍂 饵料随季节时令 · 提前推荐</h3><div class="body" id="jq_bait">--</div></div>
+</div>
 
 
 <div class="foot">
   <span data-p="fish" class="on">🐟 鱼情</span>
-  <span data-p="jieqi">🍂 节气</span>
   <span data-p="tiao">🎛️ 调漂</span>
   <span data-p="bait">🧾 开饵</span>
+  <span data-p="jieqi">🍂 节气</span>
 </div>
 
 <script>
@@ -218,15 +220,6 @@ function renderBaitAll(){
  document.getElementById("bait_state").textContent=b.st;
  document.getElementById("bait_adj").textContent=b.ad;
  renderCalc();
-}
-function renderBaitDaily(name){
- var t="当前 <b>"+name+"</b> 段：以<b>不空军为底（≥60%）</b>。";
- if(name==="白露")t+="<br>今日主推：白天 <b>①标准果酸甜腥</b>；守大物 <b>⑥乳猪饲料+螺鲤</b> 或 <b>②薯香螺腥</b>；夜钓 <b>⑤加腥</b>。";
- else if(name==="秋分"||name==="寒露"||name==="霜降")t+="<br>今日主推：<b>⑤夜钓加腥</b> 与 <b>⑥大物糗钓</b> 为主，虾粉增量、螺鲤常备。";
- else if(name==="立夏"||name==="小满"||name==="芒种"||name==="夏至"||name==="小暑"||name==="大暑")t+="<br>今日主推：<b>④闷热救场（果酸）</b> + <b>③小鲫快鱼</b>，清淡为主，慎用乳猪饲料。";
- else t+="<br>今日主推：<b>①标准果酸甜腥</b>，全天候稳妥。";
- t+="<br><br>👇 点「开饵」页可切换查看 6 套完整配方、水比与状态。";
- return t;
 }
 var METHODS=[
  {n:"调四钓二",t:"竞技·经典台钓",d:"空钩半水调四目钓二目，灵敏度高信号清晰，竞技野钓通杀。适合鲫鱼、罗非、鳊鱼，水深1-3.5米。",l:"调4目钓2目",e:2,s:"one",h:"一钩轻触底·一钩悬浮（钓灵）"},
@@ -435,14 +428,8 @@ function renderJieqi(d){
  document.getElementById("jq_main").innerHTML=
   "<b style='font-size:16px'>"+name+"</b> · "+info[0]+"<br>"+
   "距下个节气 <b>"+(j.next||"--")+"</b> 还有 <b style='color:#6fd6e0'>"+((j.next_days!=null)?j.next_days:"--")+"</b> 天";
- document.getElementById("jq_tips").innerHTML=
-  "🍽️ 适口性："+info[1]+"<br>🎣 推荐饵料："+info[2]+"<br>📍 远近："+info[3]+"<br>🪢 子线："+info[4];
- var p=parseFloat(d.live&&d.live.pressure)||1010,h=parseInt(d.live&&d.live.humidity)||60,wn=windNum(d.live&&d.live.wind_level);
- var layer=p>=1025?"高压有风 → 鲤鲫贴底，钓底为主":p<1000||h>=90?"低压闷热/高湿缺氧 → 鱼上浮，钓离底或半水":wn>=2&&wn<=4?"气压平稳+风适中 → 下风口溶氧高，钓底":p<1010?"气压偏低 → 钓离底10-20cm":"正常气压 → 钓底为主";
- document.getElementById("jq_tips").innerHTML+="<br>🌬️ 气压风力水层："+layer;
  var nd=j.next_days;
  document.getElementById("jq_bait").innerHTML= baitFuture(name,nd);
- document.getElementById("bait_main").innerHTML= renderBaitDaily(name);
 }
 function baitFuture(name,nd){
  var text="当前 <b>"+name+"</b> 段：以<b>不空军为主饵底（≥60%）</b>，搭配适量状态饵调状态。";
