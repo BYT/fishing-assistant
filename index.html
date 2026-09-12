@@ -586,7 +586,7 @@ function renderShare(o){var st="★★★★★".slice(0,o.st)+"☆☆☆☆☆"
   (o.o?"<div style='font-size:12px;color:#8fa3c0'>📝 "+esc(o.o)+"</div>":"")+
   "<div class='note' style='margin-top:10px'>该页面为钓友公布的配方分享，仅供交流参考。</div>";}
 document.getElementById("bl_stars").addEventListener("click",function(e){var r=document.getElementById("bl_stars").getBoundingClientRect();if(r.width)blStarSet(Math.max(1,Math.min(5,Math.ceil((e.clientX-r.left)/r.width*5))))});
-var PUB_KEY="VMaqvjM5Drp22XU6TV6CcL";var PUB_URL="https://kvdb.io/"+PUB_KEY+"/list";var PUB=[];var PUB_LOADED=false;
+var PUB_KEY="CAp8JEfUZRPjPWgqpLEkCA";var PUB_URL="https://kvdb.io/"+PUB_KEY+"/list";var PUB=[];var PUB_LOADED=false;
 function pubToast(m){var t=document.getElementById("pub_toast");if(!t){t=document.createElement("div");t.id="pub_toast";t.style.cssText="position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:#1b6e8a;color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;z-index:99;max-width:82%;text-align:center;box-shadow:0 4px 18px rgba(0,0,0,.4)";document.body.appendChild(t);}t.textContent=m;t.style.display="block";clearTimeout(t._t);t._t=setTimeout(function(){t.style.display="none"},2800);}
 function baitTab(m){var my=document.getElementById("bl_my"),pb=document.getElementById("bl_pub"),a=document.getElementById("bl_tab_my"),b=document.getElementById("bl_tab_pub");
  my.style.display=m==="my"?"block":"none";pb.style.display=m==="pub"?"block":"none";
