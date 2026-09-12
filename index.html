@@ -81,6 +81,7 @@ svg{width:100%;height:auto;display:block}
 
 <div class="page on" id="p-fish">
   <div class="note" style="margin:0 0 10px">📡 鱼情判断已按 <b style="color:#6fd6e0">实时气压 / 湿度 / 风力 / 水温</b> 动态调整，直连气象数据，每 15 分钟自动刷新</div>
+  <div class="card"><h3>🎯 今日出钓指数（气压·湿度·温差·风力·溶氧·节气）</h3><div class="body" id="score_card">--</div></div>
   <div class="grid3">
     <div class="g3"><div class="v" id="fP">--</div><div class="k">气压 hPa</div></div>
     <div class="g3"><div class="v" id="fH">--</div><div class="k">湿度 %</div></div>
@@ -99,7 +100,7 @@ svg{width:100%;height:auto;display:block}
     <div class="note">鱼层位置 = 时段基线 + 气压/湿度/下层溶氧综合修正；图上文字（鲤·X层/鲫·X层）与判定结论同源一致（0=水面，1=水底）· 示意</div>
   </div>
   <div class="card"><h3>📽️ 鱼情水层全天变化（动图）</h3><img src="fish-anim.gif" alt="鱼情水层动图" style="width:100%;border-radius:12px;display:block"></div>
-  <div class="card"><h3>⑥ 未来3天鱼情预判</h3><div class="body" id="c3d">--</div></div>
+  <div class="card"><h3>⑥ 未来3天鱼情趋势（含出钓评分）</h3><div class="body" id="c3d">--</div></div>
 </div>
 
 <div class="page" id="p-jieqi">
@@ -129,6 +130,14 @@ svg{width:100%;height:auto;display:block}
 </div>
 
 <div class="page" id="p-bait">
+  <div class="card"><h3>⚖️ 开饵克重计算器（跟随所选方案）</h3>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <span style="font-size:12px;color:#8fa3c0">本次干饵总量</span>
+      <input id="bait_total" type="number" value="200" min="50" max="1000" step="10" style="width:90px;padding:8px;border-radius:8px;border:1px solid rgba(111,214,224,.3);background:#0f1420;color:#e8ecf4;font-size:14px;text-align:center">
+      <span style="font-size:12px;color:#8fa3c0">克</span>
+    </div>
+    <div class="body" id="bait_calc">--</div>
+  </div>
   <div class="card"><h3>🧾 六套固定开饵单（不空军打底 ≥60%）</h3><div id="bait_plans"></div></div>
   <div class="card"><h3>配方详情</h3><div class="body" id="bait_full">--</div></div>
   <div class="card"><h3>成品状态要求</h3><div class="body" id="bait_state">--</div></div>
@@ -208,6 +217,7 @@ function renderBaitAll(){
  document.getElementById("bait_full").innerHTML="🧪 配方：<b>"+b.f+"</b><br>💧 "+b.w+"<br><br>🎯 用法："+b.u;
  document.getElementById("bait_state").textContent=b.st;
  document.getElementById("bait_adj").textContent=b.ad;
+ renderCalc();
 }
 function renderBaitDaily(name){
  var t="当前 <b>"+name+"</b> 段：以<b>不空军为底（≥60%）</b>。";
@@ -299,6 +309,92 @@ function drawLayer(li,ji,title,note){
  return s;
 }
 
+function scoreLevel(s){return s>=85?"极佳":s>=75?"很好":s>=65?"不错":s>=55?"一般":s>=40?"偏差":"很差"}
+function scoreIndex(live,today,jq){
+ var s=60,p=parseFloat(live.pressure),h=parseInt(live.humidity);
+ var hi=parseFloat(today.high),lo=parseFloat(today.low),df=hi-lo;
+ var wn=windNum(live.wind_level),t=parseFloat(live.temp),wstr=live.weather||"";
+ if(p>=1025)s+=10;else if(p>=1010)s+=6;else if(p>=1000)s+=0;else s-=12;
+ if(h>=50&&h<70)s+=6;else if(h>=70&&h<85)s+=3;else if(h>=85&&h<95)s-=4;else if(h>=95)s-=8;else if(h>=30&&h<50)s+=2;else s-=4;
+ if(!isNaN(df)){if(df>=6&&df<=10)s+=6;else if(df>10&&df<=14)s+=2;else if(df>14)s-=4;else s-=3}
+ if(wn>=1&&wn<=3)s+=6;else if(wn===4)s+=2;else if(wn===5)s-=4;else if(wn>5)s-=10;else s-=2;
+ if(wstr.indexOf("雨")>=0)s+=3;else if(wstr.indexOf("雪")>=0)s-=5;
+ if(t>=15&&t<=28)s+=6;else if((t>=8&&t<15)||(t>28&&t<=32))s+=2;else if(t>32||t<8)s-=5;
+ var dol=doEst(t).low;if(!isNaN(parseFloat(dol))){if(parseFloat(dol)>=6)s+=4;else if(parseFloat(dol)>=5)s+=2;else s-=4}
+ var gold=["惊蛰","春分","清明","谷雨","白露","秋分","寒露"],bad=["小暑","大暑","小寒","大寒","冬至"];
+ if(gold.indexOf(jq.name)>=0)s+=5;else if(bad.indexOf(jq.name)>=0)s-=3;
+ return Math.max(0,Math.min(100,Math.round(s)));
+}
+function bestWindow(t){
+ if(t>=30)return "夜钓 19:30-23:00（白天高温鱼难开口）";
+ if(t>=25)return "清晨 05:30-08:30 · 傍晚 17:30-19:30（午后闷热口稀）";
+ if(t>=12)return "清晨 06:00-09:00 · 傍晚 16:30-19:00（全天可钓）";
+ if(t>=5)return "上午 10:00-15:00（深水向阳，水温回升后开口）";
+ return "午间 12:00-15:00（一天最暖时段，钓深水）";
+}
+function scoreBar(sc){var c=sc>=75?"#52c41a":sc>=60?"#6fd6e0":sc>=45?"#f59e0b":"#e06666";return '<div style="height:8px;border-radius:4px;background:linear-gradient(90deg,'+c+' '+sc+'%,rgba(255,255,255,.08) '+sc+'%);margin:6px 0 8px"></div>'}
+function renderScore(d){
+ var box=document.getElementById("score_card");if(!box)return;
+ var live=d.live||{},today=d.today||{},jq=d.jieqi||{};
+ var sc=scoreIndex(live,today,jq),lv=scoreLevel(sc),t=parseFloat(live.temp);
+ var p=parseFloat(live.pressure),h=parseInt(live.humidity),hi=parseFloat(today.high),lo=parseFloat(today.low),df=hi-lo;
+ var up=[],dn=[];
+ if(p>=1025)up.push("气压高压+10");else if(p>=1010)up.push("气压正常+6");else if(p<1000)dn.push("低压-12");
+ if(h>=50&&h<70)up.push("湿度适中+6");else if(h>=95)dn.push("高湿缺氧-8");else if(h>=85)dn.push("湿度偏高-4");
+ if(!isNaN(df)){if(df>=6&&df<=10)up.push("温差"+df+"℃适中+6");else if(df>14)dn.push("温差"+df+"℃过大-4");else if(df<6)dn.push("温差"+df+"℃偏小-3")}
+ var wn=windNum(live.wind_level);
+ if(wn>=1&&wn<=3)up.push("风力"+wn+"级+6");else if(wn>5)dn.push("大风-10");
+ if((live.weather||"").indexOf("雨")>=0)up.push("有雨增氧+3");
+ if(t>=15&&t<=28)up.push("水温"+Math.round(t)+"℃+6");else if(t>32||t<8)dn.push("水温极端-5");
+ var jqn=jq.name||"";if(["惊蛰","春分","清明","谷雨","白露","秋分","寒露"].indexOf(jqn)>=0)up.push(jqn+"黄金季+5");
+ var line=up.length?"✅ "+up.join(" · "):"✅ 各项基本均衡";
+ if(dn.length)line+="<br>⚠️ "+dn.join(" · ");
+ var advice=sc>=75?"今日鱼情不错，优先冲傍晚黄金窗口，饵用①标准果酸甜腥（守大物⑥）。":sc>=55?"可以出钓，选最佳窗口作钓，气压平稳以钓底为主。":sc>=40?"鱼情偏差，建议改钓深水/活水口，饵用④果酸救场或⑤加腥，夜钓优于白天。":"今天不适合出钓，等气压回升、温差收窄再去。";
+ box.innerHTML='<div style="display:flex;align-items:baseline;gap:10px"><span style="font-size:34px;font-weight:800;color:'+(sc>=75?"#52c41a":sc>=60?"#6fd6e0":sc>=45?"#f59e0b":"#e06666")+'">'+sc+'</span><span style="font-size:13px;color:#8fa3c0">分 · '+lv+'</span></div>'+
+  scoreBar(sc)+
+  '🕐 最佳出钓：<b style="color:#6fd6e0">'+bestWindow(t)+'</b><br><span style="font-size:11px;color:#8fa3c0">'+line+'</span><br><br>💡 '+advice;
+}
+function futureScore(dy,jqn){
+ var s=60,hi=parseFloat(dy.high),lo=parseFloat(dy.low),df=hi-lo;
+ if(!isNaN(df)){if(df>=6&&df<=10)s+=6;else if(df>10&&df<=14)s+=2;else if(df>14)s-=4;else s-=3}
+ if(parseFloat(dy.rain)>0)s+=3;
+ if(String(dy.weather).indexOf("雪")>=0)s-=5;
+ if(!isNaN(hi)){if(hi>=15&&hi<=28)s+=6;else if((hi>=8&&hi<15)||(hi>28&&hi<=32))s+=2;else if(hi>32||hi<8)s-=5}
+ var gold=["惊蛰","春分","清明","谷雨","白露","秋分","寒露"],bad=["小暑","大暑","小寒","大寒","冬至"];
+ if(gold.indexOf(jqn)>=0)s+=5;else if(bad.indexOf(jqn)>=0)s-=3;
+ return Math.max(0,Math.min(100,Math.round(s)));
+}
+function mapToBait(fs,hi,rain){
+ if(parseFloat(rain)>0)return "④ 闷热低压救场（雨前闷）或 ① 标准果酸甜腥";
+ if(fs>=75)return "① 标准果酸甜腥";
+ if(hi>=30)return "④ 果酸救场（清淡）";
+ if(hi<=12)return "⑤ 夜钓加腥（可加红虫粉10g）";
+ return "① 标准果酸甜腥";
+}
+function parseMix(f){
+ var t=f.replace(/（[^）]*）/g,"").replace(/\([^)]*\)/g,"").replace(/温水化开/g,"");
+ var items=[],m,re=/([\u4e00-\u9fa5A-Za-z0-9]+?)(\d+(?:\.\d+)?)%/g;
+ while((m=re.exec(t))!==null)items.push({n:m[1],pct:parseFloat(m[2])});
+ var ml=0;m=t.match(/(\d+(?:\.\d+)?)ml/g);if(m)ml=parseFloat(m[0].replace("ml",""));
+ var drops="";m=t.match(/(\d+(?:-\d+)?)滴/);if(m)drops=m[1];
+ return {items:items,ml:ml,drops:drops};
+}
+function waterRatio(w){var m=String(w).match(/(0\.\d+)倍/);return m?parseFloat(m[1]):0.9}
+function renderCalc(){
+ var box=document.getElementById("bait_calc");if(!box)return;
+ var b=BAITS[selBait],inp=document.getElementById("bait_total");
+ var total=inp?parseFloat(inp.value):200;if(isNaN(total)||total<50)total=200;
+ var mx=parseMix(b.f),r=waterRatio(b.w),water=Math.max(0,Math.round(total*r-mx.ml)),rows="";
+ mx.items.forEach(function(it){rows+="<tr><td>"+it.n+"</td><td style='text-align:right'><b>"+Math.round(total*it.pct/100)+"g</b></td></tr>"});
+ if(mx.ml)rows+="<tr><td>红薯甜液/水剂</td><td style='text-align:right'><b>"+mx.ml+"ml</b>（计入水量）</td></tr>";
+ if(mx.drops)rows+="<tr><td>苹果醋</td><td style='text-align:right'><b>"+mx.drops+"滴</b></td></tr>";
+ var tips={1:"螺鲤先温水泡10分钟再拌；薯香螺腥守底",4:"螺鲤先温水泡10分钟再拌",5:"乳猪饲料+螺鲤各温水泡开5-10分钟再拌"};
+ var tip=tips[selBait]||"";
+ box.innerHTML="<div style='font-size:12px;color:#8fa3c0;margin-bottom:6px'>"+b.n+" · 干饵总量 <b style='color:#6fd6e0'>"+total+"g</b></div>"+
+  "<table><tr><th>材料</th><th style='text-align:right'>用量</th></tr>"+rows+
+  "<tr><td>💧 加水</td><td style='text-align:right'><b>"+water+"ml</b>（饵重"+r+"倍"+(mx.ml?"，扣除水剂"+mx.ml+"ml":"")+"）</td></tr></table>"+
+  (tip?"<div class='note'>⚠️ "+tip+"</div>":"");
+}
 function renderFish(d){
  var p=parseFloat(d.live&&d.live.pressure), h=parseInt(d.live&&d.live.humidity);
  var ws=d.live&&d.live.wind_level||"0级", wv=windNum(ws);
@@ -310,6 +406,7 @@ function renderFish(d){
  document.getElementById("cW").textContent=wa(wv);
  var t=parseFloat(d.live&&d.live.temp);var dox=t?doEst(t):null;
  document.getElementById("cDO").textContent=dox?("水温约"+Math.round(t)+"℃ → 上层DO≈"+dox.up+"mg/L · 中层≈"+dox.mid+"mg/L · 下层≈"+dox.low+"mg/L（白露段河温≈气温，模型估算）"):"无温度数据，无法估算";
+ renderScore(d);
  var now=new Date(), cur=slotAt(now.getHours()), fut=slotAt((now.getHours()+2)%24);
  var dol=dox?parseFloat(dox.low):null;
  var lc=layerAdjust(cur[1],cur[2],p||1010,h!=null?h:60,dol);
@@ -319,14 +416,16 @@ function renderFish(d){
    '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
    '<div style="flex:1 1 140px">'+drawLayer(lc[0],lc[1],"当前 · "+cur[0],cur[3])+'</div>'+
    '<div style="flex:1 1 140px">'+drawLayer(lc2[0],lc2[1],"预测 · "+fut[0],fut[3]+"（提前2小时）")+'</div></div>';
- var f3=d.days3||[];
+ var f3=d.days3||[],jqn=(d.jieqi||{}).name||"";
  document.getElementById("c3d").innerHTML=f3.length?f3.map(function(x){
-   var tip=[];var hi=parseFloat(x.high),lo=parseFloat(x.low);
+   var fs=futureScore(x,jqn),fl=scoreLevel(fs);
+   var fc=fs>=75?"#52c41a":fs>=60?"#6fd6e0":fs>=45?"#f59e0b":"#e06666";
+   var hi=parseFloat(x.high),tip=[];
    if(hi-lo>=10)tip.push("温差大，早晚口好");else if(hi-lo>=6)tip.push("温差适中全天可钓");else tip.push("温差小，钓早晚或夜钓");
-   if(String(x.weather).indexOf("雨")>=0||parseFloat(x.rain)>0)tip.push("有雨：增氧降温口好，钓浅边");else tip.push("无雨正常作钓");
+   if(parseFloat(x.rain)>0)tip.push("有雨：增氧降温口好，钓浅边");else tip.push("无雨正常作钓");
    if(hi>=32)tip.push("高温钓深水/夜钓");else if(hi<=10)tip.push("低温钓深水向阳用活饵");
-   var wn=windNum(x.wind);if(wn>=3&&wn<=4)tip.push("风适中钓下风口");else if(wn>=5)tip.push("风大钓背风深水");
-   return '<table><tr><th>'+x.date+'</th><td>'+esc(x.weather)+'</td><td>'+x.high+'/'+x.low+'℃</td><td>'+esc(x.wind)+'</td></tr><tr><td colspan="4" style="color:#8fa3c0">'+tip.join("；")+'</td></tr></table>';
+   tip.push("饵："+mapToBait(fs,hi,x.rain));
+   return '<table><tr><th>'+x.date+'</th><td>'+esc(x.weather)+'</td><td>'+x.high+'/'+x.low+'℃</td><td style="text-align:right"><b style="color:'+fc+'">'+fs+'分·'+fl+'</b></td></tr><tr><td colspan="4" style="color:#8fa3c0">'+tip.join("；")+'</td></tr></table>';
  }).join(""):"暂无3天数据";
 }
 
@@ -475,6 +574,7 @@ function renderWeather(x,city){
   var _t=new Date(),_ts=("0"+_t.getHours()).slice(-2)+":"+("0"+_t.getMinutes()).slice(-2);
   var w=document.getElementById("wtime");if(w)w.textContent="更新 "+_ts;
 }
+var _bt=document.getElementById("bait_total");if(_bt)_bt.addEventListener("input",renderCalc);
 loadWeather(CITY);setInterval(function(){loadWeather(CITY)},900000);
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(){})}
 </script>
