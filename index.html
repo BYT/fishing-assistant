@@ -62,15 +62,7 @@ svg{width:100%;height:auto;display:block}
   <div class="sub"><span id="citybar" style="cursor:pointer;display:inline-block;padding:10px 10px;margin:-10px -10px -10px 0;border-radius:8px">郑州 · 加载中… ▾</span><span id="netbar" style="font-size:10px;color:#6b7d99"></span><span id="wtime" style="font-size:10px;color:#6b7d99"></span></div>
 </div>
 
-<div class="weather" id="wxcard">
-  <div style="display:flex;justify-content:space-between;align-items:flex-start">
-    <div><div class="temp" id="wtemp">--<small>℃</small></div>
-      <div style="font-size:13px;color:#b9c8de" id="wwea">--</div></div>
-    <div style="text-align:right;font-size:13px" id="wrange">--</div>
-  </div>
-  <div class="meta" id="wmeta">--</div>
-</div>
-<div class="warn" id="walarm" style="display:none"></div>
+
 
 <div id="citymask" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.65);z-index:50;padding:40px 16px 16px">
 <div style="background:#181f31;border-radius:14px;padding:14px;max-width:520px;margin:0 auto">
@@ -80,6 +72,15 @@ svg{width:100%;height:auto;display:block}
 </div></div>
 
 <div class="page on" id="p-fish">
+<div class="weather" id="wxcard">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start">
+    <div><div class="temp" id="wtemp">--<small>℃</small></div>
+      <div style="font-size:13px;color:#b9c8de" id="wwea">--</div></div>
+    <div style="text-align:right;font-size:13px" id="wrange">--</div>
+  </div>
+  <div class="meta" id="wmeta">--</div>
+</div>
+<div class="warn" id="walarm" style="display:none"></div>
   <div class="note" style="margin:0 0 10px">📡 鱼情判断已按 <b style="color:#6fd6e0">实时气压 / 湿度 / 风力 / 水温</b> 动态调整，直连气象数据，每 15 分钟自动刷新</div>
   <div class="card"><h3>🎯 今日出钓指数（气压·湿度·温差·风力·溶氧·节气）</h3><div class="body" id="score_card">--</div></div>
   <div class="grid3">
