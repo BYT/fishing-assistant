@@ -90,9 +90,9 @@ svg{width:100%;height:auto;display:block}
   <div class="card"><h3>① 气压判断</h3><div class="body" id="cP">加载中…</div></div>
   <div class="card"><h3>② 湿度判断</h3><div class="body" id="cH">加载中…</div></div>
   <div class="card"><h3>③ 风力判断</h3><div class="body" id="cW">加载中…</div></div>
-  <div class="card"><h3>④ 贾鲁河三层溶解氧（模型估算，非实测）</h3>
+  <div class="card"><h3>④ <span id="cDO_river">贾鲁河</span>三层溶解氧（模型估算，非实测）</h3>
     <div class="body" id="cDO">--</div>
-    <div class="note">估算依据：水温↔饱和溶解氧物理关系；上层=饱和值92-97%，中层=78-85%，下层=64-74%。凌晨3-4点接近全天最低，下层可能跌破地表水Ⅲ类下限5mg/L。</div>
+    <div class="note">估算依据：水温↔饱和溶解氧物理关系；上层=饱和值92-97%，中层=78-85%，下层=64-74%。凌晨3-4点接近全天最低，下层可能跌破地表水Ⅲ类下限5mg/L。⚠️ 本页按所选城市水温做通用模型估算，非特定河流实测数据，切换城市后自动更新。</div>
   </div>
   <div class="card"><h3>⑤ 鲤鲫水层（当前 + 提前2小时预测）</h3>
     <div id="layer_svg"></div>
@@ -154,6 +154,8 @@ svg{width:100%;height:auto;display:block}
 </div>
 
 <script>
+var RIVERS={郑州:"贾鲁河",洛阳:"洛河/伊河",开封:"惠济河",新乡:"卫河",南阳:"白河",许昌:"颍河",焦作:"沁河",平顶山:"沙河",安阳:"洹河",漯河:"沙澧河",信阳:"浉河",周口:"沙颍河",商丘:"包河",驻马店:"练江河",三门峡:"黄河",濮阳:"金堤河",鹤壁:"淇河",济源:"沁河",巩义:"伊洛河",登封:"颍河",北京:"潮白河",上海:"黄浦江",广州:"珠江",深圳:"深圳河",天津:"海河",重庆:"嘉陵江",成都:"锦江",武汉:"长江",西安:"渭河",南京:"秦淮河",杭州:"钱塘江",苏州:"京杭运河",青岛:"大沽河",济南:"黄河",合肥:"南淝河",长沙:"湘江",南昌:"赣江",福州:"闽江",厦门:"九龙江",昆明:"盘龙江",贵阳:"南明河",南宁:"邕江",海口:"南渡江",三亚:"三亚河",太原:"汾河",石家庄:"滹沱河",呼和浩特:"大黑河",沈阳:"浑河",大连:"碧流河",长春:"伊通河",哈尔滨:"松花江",兰州:"黄河",西宁:"湟水河",银川:"黄河",乌鲁木齐:"乌鲁木齐河",拉萨:"拉萨河",香港:"城门河",澳门:"西江",台北:"基隆河"};
+function riverName(c){return RIVERS[c]||"当地河流";}
 var CITY = "郑州";
 try{var _c=localStorage.getItem("fa_city");if(_c)CITY=_c;}catch(e){}
 var CITIES=[{name:'郑州',lat:34.7466,lon:113.6254},{name:'洛阳',lat:34.6181,lon:112.4540},{name:'开封',lat:34.7973,lon:114.3076},{name:'新乡',lat:35.3030,lon:113.9268},{name:'南阳',lat:32.9908,lon:112.5283},{name:'许昌',lat:34.0357,lon:113.8520},{name:'焦作',lat:35.2159,lon:113.2418},{name:'平顶山',lat:33.7662,lon:113.1926},{name:'安阳',lat:36.0984,lon:114.3924},{name:'漯河',lat:33.5815,lon:114.0165},{name:'信阳',lat:32.1471,lon:114.0913},{name:'周口',lat:33.6261,lon:114.6969},{name:'商丘',lat:34.4143,lon:115.6563},{name:'驻马店',lat:33.0114,lon:114.0223},{name:'三门峡',lat:34.7728,lon:111.2003},{name:'濮阳',lat:35.7618,lon:115.0292},{name:'鹤壁',lat:35.7482,lon:114.2974},{name:'济源',lat:35.0906,lon:112.6023},{name:'巩义',lat:34.7478,lon:113.0220},{name:'登封',lat:34.4536,lon:113.0503},{name:'北京',lat:39.9042,lon:116.4074},{name:'上海',lat:31.2304,lon:121.4737},{name:'广州',lat:23.1291,lon:113.2644},{name:'深圳',lat:22.5431,lon:114.0579},{name:'天津',lat:39.0842,lon:117.2010},{name:'重庆',lat:29.5630,lon:106.5516},{name:'成都',lat:30.5728,lon:104.0668},{name:'武汉',lat:30.5928,lon:114.3055},{name:'西安',lat:34.3416,lon:108.9398},{name:'南京',lat:32.0603,lon:118.7969},{name:'杭州',lat:30.2741,lon:120.1551},{name:'苏州',lat:31.2989,lon:120.5853},{name:'青岛',lat:36.0671,lon:120.3826},{name:'济南',lat:36.6512,lon:117.1201},{name:'合肥',lat:31.8206,lon:117.2272},{name:'长沙',lat:28.2282,lon:112.9388},{name:'南昌',lat:28.6820,lon:115.8579},{name:'福州',lat:26.0745,lon:119.2965},{name:'厦门',lat:24.4798,lon:118.0894},{name:'昆明',lat:25.0389,lon:102.7183},{name:'贵阳',lat:26.6470,lon:106.6302},{name:'南宁',lat:22.8170,lon:108.3665},{name:'海口',lat:20.0440,lon:110.1999},{name:'三亚',lat:18.2528,lon:109.5119},{name:'太原',lat:37.8706,lon:112.5489},{name:'石家庄',lat:38.0428,lon:114.5149},{name:'呼和浩特',lat:40.8424,lon:111.7490},{name:'沈阳',lat:41.8057,lon:123.4315},{name:'大连',lat:38.9140,lon:121.6147},{name:'长春',lat:43.8171,lon:125.3235},{name:'哈尔滨',lat:45.8038,lon:126.5349},{name:'兰州',lat:36.0611,lon:103.8343},{name:'西宁',lat:36.6171,lon:101.7782},{name:'银川',lat:38.4872,lon:106.2309},{name:'乌鲁木齐',lat:43.8256,lon:87.6168},{name:'拉萨',lat:29.6520,lon:91.1721},{name:'香港',lat:22.3193,lon:114.1694},{name:'澳门',lat:22.1987,lon:113.5439},{name:'台北',lat:25.0330,lon:121.5654}];
@@ -386,6 +388,7 @@ function renderCalc(){
   (tip?"<div class='note'>⚠️ "+tip+"</div>":"");
 }
 function renderFish(d){
+ var rn=riverName(d.city||CITY);var rt=document.getElementById("cDO_river");if(rt)rt.textContent=rn;
  var p=parseFloat(d.live&&d.live.pressure), h=parseInt(d.live&&d.live.humidity);
  var ws=d.live&&d.live.wind_level||"0级", wv=windNum(ws);
  document.getElementById("fP").textContent=p?Math.round(p):"--";
@@ -395,7 +398,7 @@ function renderFish(d){
  document.getElementById("cH").textContent=h!=null&&!isNaN(h)?ha(h):"暂无湿度数据";
  document.getElementById("cW").textContent=wa(wv);
  var t=parseFloat(d.live&&d.live.temp);var dox=t?doEst(t):null;
- document.getElementById("cDO").textContent=dox?("水温约"+Math.round(t)+"℃ → 上层DO≈"+dox.up+"mg/L · 中层≈"+dox.mid+"mg/L · 下层≈"+dox.low+"mg/L（白露段河温≈气温，模型估算）"):"无温度数据，无法估算";
+ document.getElementById("cDO").textContent=dox?("水温约"+Math.round(t)+"℃ → 上层DO≈"+dox.up+"mg/L · 中层≈"+dox.mid+"mg/L · 下层≈"+dox.low+"mg/L（"+rn+"水温≈气温，通用模型估算，非实测）"):"无温度数据，无法估算";
  renderScore(d);
  var now=new Date(), cur=slotAt(now.getHours()), fut=slotAt((now.getHours()+2)%24);
  var dol=dox?parseFloat(dox.low):null;
