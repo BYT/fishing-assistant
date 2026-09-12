@@ -148,8 +148,13 @@ svg{width:100%;height:auto;display:block}
 
 </div>
 <div class="page" id="p-baitlog">
-  <div class="card"><h3>🧪 自测饵料配方库（仅本机可见）</h3>
-    <div class="note">记录你自己试过的饵料和配方，数据只保存在本机浏览器，其他人看不到；需要分享某条时点「🔗 公布」生成只读链接。</div>
+  <div class="card"><h3>🧪 饵料配方库</h3>
+    <div class="note">饵库分两类：📋「我的配方」仅本机可见；🌐「公开饵库」收集所有钓友点「📢 公布」分享的饵料，打开软件即可看到。</div></div>
+  <div style="display:flex;gap:8px;margin-bottom:12px">
+    <button id="bl_tab_my" onclick="baitTab('my')" style="flex:1;padding:10px;border-radius:10px;border:1px solid rgba(111,214,224,.4);background:linear-gradient(135deg,#1b6e8a,#12475c);color:#fff;font-size:14px">📋 我的配方</button>
+    <button id="bl_tab_pub" onclick="baitTab('pub')" style="flex:1;padding:10px;border-radius:10px;border:1px solid rgba(111,214,224,.3);background:#0f1420;color:#cbd5e1;font-size:14px">🌐 公开饵库</button>
+  </div>
+  <div id="bl_my">
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
       <button onclick="baitLogForm()" style="flex:1 1 96px;padding:9px 10px;border-radius:9px;border:1px solid rgba(111,214,224,.35);background:linear-gradient(135deg,#1b2a44,#0f1420);color:#6fd6e0;font-size:13px">➕ 新增配方</button>
       <button onclick="baitLogExport()" style="flex:1 1 96px;padding:9px 10px;border-radius:9px;border:1px solid rgba(111,214,224,.3);background:#0f1420;color:#cbd5e1;font-size:13px">⬇️ 导出备份</button>
@@ -183,6 +188,16 @@ svg{width:100%;height:auto;display:block}
     </div>
   </div>
   <div class="card"><h3>📋 我的记录（<span id="bl_count">0</span>）</h3><div id="baitlog_list"></div></div>
+  </div>
+  <div id="bl_pub" style="display:none">
+  <div class="card"><h3>🌐 公开饵库（<span id="pub_count">0</span>）</h3>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <button onclick="pubLoad()" style="flex:1;padding:9px;border-radius:9px;border:1px solid rgba(111,214,224,.3);background:#0f1420;color:#cbd5e1;font-size:13px">🔄 刷新</button>
+      <button onclick="pubToast('在我的配方里点「📢 公布」，配方即发布到公开饵库，所有钓友可见')" style="flex:1;padding:9px;border-radius:9px;border:1px solid rgba(111,214,224,.3);background:#0f1420;color:#cbd5e1;font-size:13px">❓ 如何公布</button>
+    </div>
+    <div id="pub_list"></div>
+  </div>
+  </div>
 </div>
 <div id="share_box" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(10,14,22,.94);z-index:99;overflow:auto;padding:20px;box-sizing:border-box">
   <div style="max-width:520px;margin:0 auto">
@@ -527,7 +542,8 @@ function renderBaitLog(){
    (r.note?"<div style='font-size:12px;color:#8fa3c0'>📝 "+esc(r.note)+"</div>":"")+
    "<div style='display:flex;gap:8px;margin-top:8px;flex-wrap:wrap'>"+
     "<button onclick='baitLogEdit("+r.id+")' style='flex:1 1 60px;padding:7px 8px;border-radius:8px;border:1px solid rgba(111,214,224,.3);background:#0f1420;color:#cbd5e1;font-size:12px'>✏️ 编辑</button>"+
-    "<button onclick='baitLogShare("+r.id+")' style='flex:1 1 60px;padding:7px 8px;border-radius:8px;border:1px solid rgba(245,166,35,.4);background:#0f1420;color:#f5a623;font-size:12px'>🔗 公布</button>"+
+    "<button onclick='baitLogPub("+r.id+")' style='flex:1 1 60px;padding:7px 8px;border-radius:8px;border:1px solid rgba(82,196,26,.45);background:#0f1420;color:#7ed957;font-size:12px'>"+(r.pub?"✓ 已公布":"📢 公布")+"</button>"+
+    "<button onclick='baitLogShare("+r.id+")' style='flex:1 1 60px;padding:7px 8px;border-radius:8px;border:1px solid rgba(245,166,35,.4);background:#0f1420;color:#f5a623;font-size:12px'>🔗 分享</button>"+
     "<button onclick='baitLogDel("+r.id+")' style='flex:1 1 60px;padding:7px 8px;border-radius:8px;border:1px solid rgba(234,102,104,.4);background:#0f1420;color:#e06666;font-size:12px'>🗑️ 删除</button>"+
    "</div></div>";
  }).join("");
@@ -570,6 +586,38 @@ function renderShare(o){var st="★★★★★".slice(0,o.st)+"☆☆☆☆☆"
   (o.o?"<div style='font-size:12px;color:#8fa3c0'>📝 "+esc(o.o)+"</div>":"")+
   "<div class='note' style='margin-top:10px'>该页面为钓友公布的配方分享，仅供交流参考。</div>";}
 document.getElementById("bl_stars").addEventListener("click",function(e){var r=document.getElementById("bl_stars").getBoundingClientRect();if(r.width)blStarSet(Math.max(1,Math.min(5,Math.ceil((e.clientX-r.left)/r.width*5))))});
+var PUB_KEY="VMaqvjM5Drp22XU6TV6CcL";var PUB_URL="https://kvdb.io/"+PUB_KEY+"/list";var PUB=[];var PUB_LOADED=false;
+function pubToast(m){var t=document.getElementById("pub_toast");if(!t){t=document.createElement("div");t.id="pub_toast";t.style.cssText="position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:#1b6e8a;color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;z-index:99;max-width:82%;text-align:center;box-shadow:0 4px 18px rgba(0,0,0,.4)";document.body.appendChild(t);}t.textContent=m;t.style.display="block";clearTimeout(t._t);t._t=setTimeout(function(){t.style.display="none"},2800);}
+function baitTab(m){var my=document.getElementById("bl_my"),pb=document.getElementById("bl_pub"),a=document.getElementById("bl_tab_my"),b=document.getElementById("bl_tab_pub");
+ my.style.display=m==="my"?"block":"none";pb.style.display=m==="pub"?"block":"none";
+ var on="flex:1;padding:10px;border-radius:10px;border:1px solid rgba(111,214,224,.4);background:linear-gradient(135deg,#1b6e8a,#12475c);color:#fff;font-size:14px";
+ var off="flex:1;padding:10px;border-radius:10px;border:1px solid rgba(111,214,224,.3);background:#0f1420;color:#cbd5e1;font-size:14px";
+ a.style.cssText=m==="my"?on:off;b.style.cssText=m==="pub"?on:off;
+ if(m==="pub"&&!PUB_LOADED)pubLoad();}
+function renderPubBait(list){var box=document.getElementById("pub_list"),n=document.getElementById("pub_count");if(n)n.textContent=list.length;
+ if(!list.length){box.innerHTML="<div class='note'>还没有钓友分享。在「📋 我的配方」里点「📢 公布」，你的配方就会出现在这里，所有钓友可见。</div>";return;}
+ box.innerHTML=list.map(function(r){
+  var stars="★★★★★".slice(0,r.st||0)+"☆☆☆☆☆".slice(0,5-(r.st||0));
+  var dt=r.d||"";if(r.ts){var t=new Date(r.ts);dt=(r.d?r.d+" ":"")+("0"+t.getHours()).slice(-2)+":"+("0"+t.getMinutes()).slice(-2);}
+  return "<div style='border:1px solid rgba(111,214,224,.18);border-radius:12px;padding:10px;margin-bottom:8px'>"+
+   "<div style='display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap'><b style='color:#e8ecf4'>"+esc(r.n)+"</b><span style='color:#f5a623;font-size:13px'>"+stars+"</span></div>"+
+   "<div style='font-size:11px;color:#8fa3c0;margin:4px 0'>分享自钓友 · "+esc(dt)+(r.p?" · "+esc(r.p):"")+(r.t?" · "+esc(r.t):"")+"</div>"+
+   (r.m?"<div style='font-size:12px;color:#cbd5e1;margin-top:2px'>🧪 "+esc(r.m)+"</div>":"")+
+   (r.w?"<div style='font-size:12px;color:#cbd5e1'>💧 "+esc(r.w)+"</div>":"")+
+   (r.s?"<div style='font-size:12px;color:#cbd5e1'>✨ "+esc(r.s)+"</div>":"")+
+   (r.r?"<div style='font-size:12px;color:#cbd5e1'>🎣 "+esc(r.r)+"</div>":"")+
+   (r.o?"<div style='font-size:12px;color:#8fa3c0'>📝 "+esc(r.o)+"</div>":"")+
+   "</div>";
+ }).join("");}
+function pubLoad(){var box=document.getElementById("pub_list");if(box)box.innerHTML="<div class='note'>🔄 正在获取公开饵库…</div>";
+ return fetch(PUB_URL).then(function(x){return x.ok?x.json():Promise.reject("HTTP "+x.status)}).then(function(a){PUB=Array.isArray(a)?a:[];PUB_LOADED=true;renderPubBait(PUB);}).catch(function(){if(box)box.innerHTML="<div class='note'>⚠️ 公开饵库暂时无法连接（公共存储未激活或网络异常）。请稍后点「🔄 刷新」重试。若持续失败请联系助手激活公共存储。</div>";});}
+function baitLogPub(id){var r=BL.filter(function(x){return x.id===id})[0];if(!r)return;
+ return fetch(PUB_URL).then(function(x){return x.ok?x.json():Promise.reject("HTTP "+x.status)}).then(function(a){
+  var arr=Array.isArray(a)?a:[];
+  arr.unshift({n:r.name,m:r.mix,w:r.water,s:r.state,d:r.date,p:r.spot,t:r.weather,r:r.result,st:r.star,o:r.note,ts:Date.now()});
+  return fetch(PUB_URL,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(arr)});
+ }).then(function(x){if(!x.ok)throw 0;r.pub=true;blSave();pubToast("✅ 已公布到公开饵库，所有钓友可见");if(PUB_LOADED)pubLoad();}).catch(function(){pubToast("⚠️ 公布失败：公共存储未激活或网络异常，请稍后重试");});}
+
 renderBaitLog();
 
 
