@@ -586,7 +586,7 @@ function renderShare(o){var st="★★★★★".slice(0,o.st)+"☆☆☆☆☆"
   (o.o?"<div style='font-size:12px;color:#8fa3c0'>📝 "+esc(o.o)+"</div>":"")+
   "<div class='note' style='margin-top:10px'>该页面为钓友公布的配方分享，仅供交流参考。</div>";}
 document.getElementById("bl_stars").addEventListener("click",function(e){var r=document.getElementById("bl_stars").getBoundingClientRect();if(r.width)blStarSet(Math.max(1,Math.min(5,Math.ceil((e.clientX-r.left)/r.width*5))))});
-var PUB_KEY="CvfcyxKaQURwtCJRCaPc7n";var PUB_URL="https://kvdb.io/"+PUB_KEY+"/list";var PUB=[];var PUB_LOADED=false;
+var PUB_KEY="ff808181a067127101a09500a5fc00a5";var PUB_URL="https://api.restful-api.dev/objects/"+PUB_KEY;var PUB_NAME="fishing-assistant-pub";var PUB=[];var PUB_LOADED=false;
 function pubToast(m){var t=document.getElementById("pub_toast");if(!t){t=document.createElement("div");t.id="pub_toast";t.style.cssText="position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:#1b6e8a;color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;z-index:99;max-width:82%;text-align:center;box-shadow:0 4px 18px rgba(0,0,0,.4)";document.body.appendChild(t);}t.textContent=m;t.style.display="block";clearTimeout(t._t);t._t=setTimeout(function(){t.style.display="none"},2800);}
 function baitTab(m){var my=document.getElementById("bl_my"),pb=document.getElementById("bl_pub"),a=document.getElementById("bl_tab_my"),b=document.getElementById("bl_tab_pub");
  my.style.display=m==="my"?"block":"none";pb.style.display=m==="pub"?"block":"none";
@@ -610,12 +610,12 @@ function renderPubBait(list){var box=document.getElementById("pub_list"),n=docum
    "</div>";
  }).join("");}
 function pubLoad(){var box=document.getElementById("pub_list");if(box)box.innerHTML="<div class='note'>🔄 正在获取公开饵库…</div>";
- return fetch(PUB_URL).then(function(x){return x.ok?x.json():Promise.reject("HTTP "+x.status)}).then(function(a){PUB=Array.isArray(a)?a:[];PUB_LOADED=true;renderPubBait(PUB);}).catch(function(){if(box)box.innerHTML="<div class='note'>⚠️ 公开饵库暂时无法连接（公共存储未激活或网络异常）。请稍后点「🔄 刷新」重试。若持续失败请联系助手激活公共存储。</div>";});}
+ return fetch(PUB_URL).then(function(x){return x.ok?x.json():Promise.reject("HTTP "+x.status)}).then(function(a){PUB=(a&&a.data&&Array.isArray(a.data.recipes))?a.data.recipes:[];PUB_LOADED=true;renderPubBait(PUB);}).catch(function(){if(box)box.innerHTML="<div class='note'>⚠️ 公开饵库暂时无法连接（公共存储未激活或网络异常）。请稍后点「🔄 刷新」重试。若持续失败请联系助手激活公共存储。</div>";});}
 function baitLogPub(id){var r=BL.filter(function(x){return x.id===id})[0];if(!r)return;
  return fetch(PUB_URL).then(function(x){return x.ok?x.json():Promise.reject("HTTP "+x.status)}).then(function(a){
-  var arr=Array.isArray(a)?a:[];
+  var arr=(a&&a.data&&Array.isArray(a.data.recipes))?a.data.recipes:[];
   arr.unshift({n:r.name,m:r.mix,w:r.water,s:r.state,d:r.date,p:r.spot,t:r.weather,r:r.result,st:r.star,o:r.note,ts:Date.now()});
-  return fetch(PUB_URL,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(arr)});
+  return fetch(PUB_URL,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:PUB_NAME,data:{recipes:arr}})});
  }).then(function(x){if(!x.ok)throw 0;r.pub=true;blSave();pubToast("✅ 已公布到公开饵库，所有钓友可见");if(PUB_LOADED)pubLoad();}).catch(function(){pubToast("⚠️ 公布失败：公共存储未激活或网络异常，请稍后重试");});}
 
 renderBaitLog();
