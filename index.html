@@ -410,7 +410,7 @@ function renderFish(d){
  document.getElementById("c3d").innerHTML=f3.length?f3.map(function(x){
    var fs=futureScore(x,jqn),fl=scoreLevel(fs);
    var fc=fs>=75?"#52c41a":fs>=60?"#6fd6e0":fs>=45?"#f59e0b":"#e06666";
-   var hi=parseFloat(x.high),tip=[];
+   var hi=parseFloat(x.high),lo=parseFloat(x.low),tip=[];
    if(hi-lo>=10)tip.push("温差大，早晚口好");else if(hi-lo>=6)tip.push("温差适中全天可钓");else tip.push("温差小，钓早晚或夜钓");
    if(parseFloat(x.rain)>0)tip.push("有雨：增氧降温口好，钓浅边");else tip.push("无雨正常作钓");
    if(hi>=32)tip.push("高温钓深水/夜钓");else if(hi<=10)tip.push("低温钓深水向阳用活饵");
@@ -553,7 +553,7 @@ function renderWeather(x,city){
   mm.push("降雨 <b>"+(l.rain&&l.rain>0?l.rain+"mm":"无")+"</b>");
   mm.push("温差 <b>"+(d.today?((parseFloat(d.today.high)-parseFloat(d.today.low)).toFixed(0))+"℃":"--")+"</b>");
   document.getElementById("wmeta").innerHTML=mm.join(" · ");
-  renderFish(d);renderJieqi(d);
+  try{renderFish(d)}catch(e){}try{renderJieqi(d)}catch(e){}
   document.getElementById("netbar").textContent="数据在线";
   var _t=new Date(),_ts=("0"+_t.getHours()).slice(-2)+":"+("0"+_t.getMinutes()).slice(-2);
   var w=document.getElementById("wtime");if(w)w.textContent="更新 "+_ts;
