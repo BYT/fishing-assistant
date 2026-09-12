@@ -599,6 +599,20 @@ function renderPubBait(list){var box=document.getElementById("pub_list"),n=docum
  box.innerHTML=list.map(function(r){
   var stars="★★★★★".slice(0,r.st||0)+"☆☆☆☆☆".slice(0,5-(r.st||0));
   var dt=r.d||"";if(r.ts){var t=new Date(r.ts);dt=(r.d?r.d+" ":"")+("0"+t.getHours()).slice(-2)+":"+("0"+t.getMinutes()).slice(-2);}
+  var id=r.id||("r"+(r.ts||0));
+  var likes=r.likes||0,cs=r.comments||[];
+  var liked=!!LIKED[id],myTs=CMTS[id];
+  var myCmt="";
+  if(myTs){var mc=cs.filter(function(c){return c.ts===myTs})[0];if(mc)myCmt="<div style='font-size:11px;color:#7ed957;margin:5px 0'>我评：<b>"+esc(mc.v)+"</b> · "+pubFmtTs(mc.ts)+"</div>";}
+  var cmtHtml=cs.slice().sort(function(a,b){return b.ts-a.ts}).map(function(c){
+   var mine=c.ts===myTs;
+   return "<div style='font-size:11px;color:#8fa3c0;margin:3px 0'>"+(mine?"<b style='color:#7ed957'>我</b> · ":"钓友 · ")+esc(c.v)+" <span style='color:#5c7191'>"+pubFmtTs(c.ts)+"</span></div>";
+  }).join("");
+  var cmtBtns=[["优秀","#7ed957"],["良好","#8bc8ea"],["差","#e06666"]].map(function(o){
+   var v=o[0],col=o[1];
+   var act=myTs&&cs.filter(function(c){return c.ts===myTs})[0]&&cs.filter(function(c){return c.ts===myTs})[0].v===v;
+   return "<button onclick='pubComment(\""+id+"\",\""+v+"\")' style='flex:1;padding:6px 4px;border-radius:8px;border:1px solid "+(act?col+"":"rgba(111,214,224,.3)")+";background:"+(act?col+"2e":"#0f1420")+";color:"+(act?col:"#cbd5e1")+";font-size:12px'>"+(act?"✓ ":"")+v+"</button>";
+  }).join("");
   return "<div style='border:1px solid rgba(111,214,224,.18);border-radius:12px;padding:10px;margin-bottom:8px'>"+
    "<div style='display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap'><b style='color:#e8ecf4'>"+esc(r.n)+"</b><span style='color:#f5a623;font-size:13px'>"+stars+"</span></div>"+
    "<div style='font-size:11px;color:#8fa3c0;margin:4px 0'>分享自钓友 · "+esc(dt)+(r.p?" · "+esc(r.p):"")+(r.t?" · "+esc(r.t):"")+"</div>"+
@@ -607,14 +621,41 @@ function renderPubBait(list){var box=document.getElementById("pub_list"),n=docum
    (r.s?"<div style='font-size:12px;color:#cbd5e1'>✨ "+esc(r.s)+"</div>":"")+
    (r.r?"<div style='font-size:12px;color:#cbd5e1'>🎣 "+esc(r.r)+"</div>":"")+
    (r.o?"<div style='font-size:12px;color:#8fa3c0'>📝 "+esc(r.o)+"</div>":"")+
+   "<div style='display:flex;gap:8px;margin-top:8px'>"+
+    "<button onclick='pubLike(\""+id+"\")' style='flex:1;padding:7px 8px;border-radius:8px;border:1px solid "+(liked?"rgba(245,166,35,.6)":"rgba(245,166,35,.35)")+";background:"+(liked?"rgba(245,166,35,.14)":"#0f1420")+";color:#f5a623;font-size:13px'>"+(liked?"⭐ 已赞 ":"⭐ 点赞 ")+likes+"</button>"+
+   "</div>"+
+   "<div style='margin-top:8px;border-top:1px solid rgba(111,214,224,.12);padding-top:8px'>"+
+    "<div style='font-size:11px;color:#8fa3c0;margin-bottom:5px'>📝 点评（优秀 / 良好 / 差）</div>"+
+    "<div style='display:flex;gap:6px'>"+cmtBtns+"</div>"+myCmt+cmtHtml+
+   "</div>"+
    "</div>";
  }).join("");}
+var LIKED={},CMTS={};
+try{LIKED=JSON.parse(localStorage.getItem("fa_pub_liked")||"{}")}catch(e){}
+try{CMTS=JSON.parse(localStorage.getItem("fa_pub_commented")||"{}")}catch(e){}
+function pubSave(){return fetch(PUB_URL,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:PUB_NAME,data:{recipes:PUB}})});}
+function pubFmtTs(ts){var t=new Date(ts);return ("0"+(t.getMonth()+1)).slice(-2)+"-"+("0"+t.getDate()).slice(-2)+" "+("0"+t.getHours()).slice(-2)+":"+("0"+t.getMinutes()).slice(-2);}
+function pubLike(id){var r=PUB.filter(function(x){return (x.id||("r"+(x.ts||0)))===id})[0];if(!r)return;
+ if(LIKED[id]){pubToast("你已经赞过这条配方了 ⭐");return;}
+ if(!r.id)r.id=id;
+ r.likes=(r.likes||0)+1;LIKED[id]=1;try{localStorage.setItem("fa_pub_liked",JSON.stringify(LIKED))}catch(e){}
+ pubSave().then(function(x){if(x.ok){renderPubBait(PUB);pubToast("⭐ 已点赞 +1")}else{pubToast("⚠️ 点赞未保存，请稍后重试")}}).catch(function(){pubToast("⚠️ 网络异常，点赞未保存");});}
+function pubComment(id,v){var r=PUB.filter(function(x){return (x.id||("r"+(x.ts||0)))===id})[0];if(!r)return;
+ if(!r.id)r.id=id;
+ var arr=r.comments||[];
+ var myTs=CMTS[id];
+ if(myTs){arr=arr.filter(function(c){return c.ts!==myTs;});}
+ var now=Date.now();
+ arr.push({v:v,ts:now});
+ r.comments=arr;CMTS[id]=now;
+ try{localStorage.setItem("fa_pub_commented",JSON.stringify(CMTS))}catch(e){}
+ pubSave().then(function(x){if(x.ok){renderPubBait(PUB);pubToast("✅ 点评已发布："+v)}else{pubToast("⚠️ 点评未保存，请稍后重试")}}).catch(function(){pubToast("⚠️ 网络异常，点评未保存");});}
 function pubLoad(){var box=document.getElementById("pub_list");if(box)box.innerHTML="<div class='note'>🔄 正在获取公开饵库…</div>";
  return fetch(PUB_URL).then(function(x){return x.ok?x.json():Promise.reject("HTTP "+x.status)}).then(function(a){PUB=(a&&a.data&&Array.isArray(a.data.recipes))?a.data.recipes:[];PUB_LOADED=true;renderPubBait(PUB);}).catch(function(){if(box)box.innerHTML="<div class='note'>⚠️ 公开饵库暂时无法连接（公共存储未激活或网络异常）。请稍后点「🔄 刷新」重试。若持续失败请联系助手激活公共存储。</div>";});}
 function baitLogPub(id){var r=BL.filter(function(x){return x.id===id})[0];if(!r)return;
  return fetch(PUB_URL).then(function(x){return x.ok?x.json():Promise.reject("HTTP "+x.status)}).then(function(a){
   var arr=(a&&a.data&&Array.isArray(a.data.recipes))?a.data.recipes:[];
-  arr.unshift({n:r.name,m:r.mix,w:r.water,s:r.state,d:r.date,p:r.spot,t:r.weather,r:r.result,st:r.star,o:r.note,ts:Date.now()});
+  arr.unshift({id:"r"+Date.now(),n:r.name,m:r.mix,w:r.water,s:r.state,d:r.date,p:r.spot,t:r.weather,r:r.result,st:r.star,o:r.note,ts:Date.now(),likes:0,comments:[]});
   return fetch(PUB_URL,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:PUB_NAME,data:{recipes:arr}})});
  }).then(function(x){if(!x.ok)throw 0;r.pub=true;blSave();pubToast("✅ 已公布到公开饵库，所有钓友可见");if(PUB_LOADED)pubLoad();}).catch(function(){pubToast("⚠️ 公布失败：公共存储未激活或网络异常，请稍后重试");});}
 
