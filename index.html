@@ -112,7 +112,13 @@ svg{width:100%;height:auto;display:block}
 <div class="page" id="p-tiao">
   <div class="card"><h3>选择调漂方法（看入水状态）</h3><div id="method_list"></div></div>
   <div class="card"><h3>入水状态示意</h3><div id="draw_svg"></div><div class="note" id="draw_desc">选择方法后显示</div></div>
-  <div class="card"><h3>📽️ 调漂全过程演示（动图 · 随所选方法切换）</h3><img id="tiao_gif" src="tiao-m1.gif" alt="调漂演示动图" style="width:100%;border-radius:12px;display:block"></div>
+  <div class="card"><h3>📽️ 调漂四步演示（四宫格动图 · 随所选方法切换）</h3>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">
+    <div><div style="font-size:12px;color:#6fd6e0;text-align:center;margin-bottom:4px">① 重铅找底</div><img id="tiao_gif_1" src="tiao-m1-s1.gif" alt="找底" style="width:100%;border-radius:10px;display:block"></div>
+    <div><div style="font-size:12px;color:#6fd6e0;text-align:center;margin-bottom:4px">② 半水调目</div><img id="tiao_gif_2" src="tiao-m1-s2.gif" alt="调目" style="width:100%;border-radius:10px;display:block"></div>
+    <div><div style="font-size:12px;color:#6fd6e0;text-align:center;margin-bottom:4px">③ 挂饵找钓目</div><img id="tiao_gif_3" src="tiao-m1-s3.gif" alt="钓目" style="width:100%;border-radius:10px;display:block"></div>
+    <div><div style="font-size:12px;color:#6fd6e0;text-align:center;margin-bottom:4px">④ 对口微调</div><img id="tiao_gif_4" src="tiao-m1-s4.gif" alt="微调" style="width:100%;border-radius:10px;display:block"></div>
+  </div></div>
   <div class="steps">
   <h3 style="font-size:13px;color:#6fd6e0;margin:0 0 8px">调漂四步 · 详细流程</h3>
   <div><h3 style="font-size:12px;color:#8fa3c0;margin:0 0 2px">① 重铅找底（定水深）</h3><ol id="steps_zd"></ol></div>
@@ -355,7 +361,7 @@ function renderBaitFull(){renderBaitAll();return ""}
 renderBaitPlans();renderBaitAll();
 
 function renderMethods(){
- var tg=document.getElementById("tiao_gif");if(tg)tg.src="tiao-m"+(selM+1)+".gif";
+ for(var k=1;k<=4;k++){var g=document.getElementById("tiao_gif_"+k);if(g)g.src="tiao-m"+(selM+1)+"-s"+k+".gif";}
  var list=document.getElementById("method_list");list.innerHTML="";
  METHODS.forEach(function(m,i){
   var d=document.createElement("div");d.className="method"+(i===selM?" on":"");
@@ -368,48 +374,58 @@ document.getElementById("steps_tm").innerHTML=TM.map(function(s){return "<li>"+s
 document.getElementById("steps_dm").innerHTML=DM.map(function(s){return "<li>"+s+"</li>"}).join("");
 document.getElementById("steps_vm").innerHTML=VM.map(function(s){return "<li>"+s+"</li>"}).join("");
 }
-function drawHook(x,y){return '<path d="M'+x+' '+y+' l9 0 M'+(x+9)+' '+y+' q5 9 -1 12 M'+(x+8)+' '+(y+12)+' l3 -7" stroke="#d8e2f0" fill="none" stroke-width="1.6" stroke-linecap="round"/>'}
-function drawHookUp(x,y){return '<path d="M'+x+' '+y+' l0 10 M'+x+' '+(y+10)+' q-7 2 -6 9 M'+(x-6)+' '+(y+19)+' l7 -4" stroke="#d8e2f0" fill="none" stroke-width="1.6" stroke-linecap="round"/>'}
 function renderDraw(){
- var m=METHODS[selM],w=200,h=245,e=m.e;
- var s='<svg viewBox="0 0 '+w+' '+h+'" style="background:#121826;border-radius:14px">';
- s+='<line x1="18" y1="52" x2="182" y2="52" stroke="#3d5466" stroke-width="1.2" stroke-dasharray="1 0"/>';
- s+='<path d="M16 52 q7 -4 14 0 t14 0 t14 0 t14 0 t14 0 t14 0 t14 0 t14 0 t14 0 t14 0 t12 0" stroke="#4a8fb8" fill="none" stroke-width="1.6" stroke-linecap="round"/>';
- s+='<text x="24" y="44" font-size="8" fill="#6fb6d8">水面</text>';
- s+='<line x1="16" y1="216" x2="184" y2="216" stroke="#4a5a78" stroke-width="1.4"/>';
- s+='<circle cx="30" cy="219" r="1.8" fill="#4a5a78"/><circle cx="48" cy="213" r="1.4" fill="#3d4a63"/><circle cx="66" cy="219" r="1.8" fill="#4a5a78"/><circle cx="140" cy="213" r="1.4" fill="#3d4a63"/><circle cx="158" cy="219" r="1.8" fill="#4a5a78"/><circle cx="176" cy="213" r="1.4" fill="#3d4a63"/>';
- s+='<text x="88" y="232" font-size="8" fill="#8fa3c0">水底</text>';
- var sy=52-e*8;
- for(var i=0;i<4;i++){var y0=sy+i*8,y1=y0+8,col=i%2?"#41a85f":"#e06666";if(y0>=52)col="#5a6a84";s+='<rect x="98" y="'+y0+'" width="4" height="'+(y1-y0)+'" fill="'+col+'"/>'}
- s+='<rect x="97" y="'+(sy-3)+'" width="6" height="3" rx="1.5" fill="#e06666"/>';
- s+='<path d="M100 66 C86 74 84 88 88 98 C91 103 95 104 100 104 C105 104 109 103 112 98 C116 88 114 74 100 66 Z" fill="#e2604f" stroke="#a8433a" stroke-width="0.8"/>';
- s+='<rect x="87" y="84" width="26" height="5" rx="2.5" fill="#e8ecf4" opacity="0.85"/>';
- s+='<path d="M98 104 L102 104 L100.7 120 L99.3 120 Z" fill="#9a7a52"/>';
- s+='<circle cx="100" cy="123" r="2.6" fill="#b9c8de"/>';
- s+='<line x1="100" y1="125" x2="100" y2="150" stroke="#b9c8de" stroke-width="1.2"/>';
- s+='<rect x="92.5" y="150" width="15" height="13" rx="2" fill="#8a97ab" stroke="#5f6c80" stroke-width="0.8"/>';
- s+='<line x1="92.5" y1="154" x2="107.5" y2="154" stroke="#5f6c80" stroke-width="0.7"/><line x1="92.5" y1="159" x2="107.5" y2="159" stroke="#5f6c80" stroke-width="0.7"/>';
- s+='<ellipse cx="100" cy="167" rx="4" ry="2.6" fill="#c8d6ea"/>';
- s+='<line x1="100" y1="169.6" x2="100" y2="169.6" stroke="#c8d6ea" stroke-width="1.2"/>';
+ var m=METHODS[selM],w=190,h=230,e=m.e,sy=50-7*e;
+ var s='<svg viewBox="0 0 '+w+' '+h+'" style="max-width:230px;margin:0 auto;display:block;background:#121826;border-radius:14px">';
+ s+='<defs><linearGradient id="bg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f06a50"/><stop offset="1" stop-color="#b83a28"/></linearGradient><linearGradient id="bg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b9c8de"/><stop offset="1" stop-color="#7c8aa0"/></linearGradient></defs>';
+ s+='<path d="M18 50 q8 -4 16 0 t16 0 t16 0 t16 0 t16 0 t16 0 t16 0 t16 0 t12 0" stroke="#4a8fb8" fill="none" stroke-width="1.2" stroke-linecap="round"/>';
+ s+='<text x="24" y="42" font-size="7" fill="#6fb6d8">水面</text>';
+ s+='<ellipse cx="95" cy="50" rx="16" ry="3" fill="none" stroke="#6fb6d8" stroke-width="0.7" opacity="0.7"/>';
+ s+='<line x1="16" y1="200" x2="174" y2="200" stroke="#4a5a78" stroke-width="1.2"/>';
+ s+='<circle cx="30" cy="203" r="1.6" fill="#3f4f6b"/><circle cx="50" cy="197" r="1.2" fill="#3d4a63"/><circle cx="72" cy="203" r="1.6" fill="#3f4f6b"/><circle cx="130" cy="197" r="1.4" fill="#3d4a63"/><circle cx="150" cy="203" r="1.6" fill="#3f4f6b"/>';
+ s+='<path d="M60 200 q-4 -18 0 -34" stroke="#2f6b4f" fill="none" stroke-width="1.6"/>';
+ s+='<path d="M140 200 q4 -16 0 -30" stroke="#2f6b4f" fill="none" stroke-width="1.4"/>';
+ s+='<text x="86" y="216" font-size="7" fill="#8fa3c0">水底</text>';
+ var y=sy;
+ for(var i=0;i<6;i++){var col=y>=50?"#3d4a63":(i%2?"#2e9e4f":"#e04444");s+='<rect x="93" y="'+y+'" width="4" height="7" fill="'+col+'"/>';y+=7;}
+ s+='<rect x="92" y="'+(sy-2)+'" width="6" height="3" rx="1.5" fill="#e04444"/>';
+ s+='<path d="M95 '+(sy+42)+' C82 '+(sy+49)+' 80 '+(sy+62)+' 83 '+(sy+72)+' C86 '+(sy+77)+' 90 '+(sy+78)+' 95 '+(sy+78)+' C100 '+(sy+78)+' 104 '+(sy+77)+' 107 '+(sy+72)+' C110 '+(sy+62)+' 108 '+(sy+49)+' 95 '+(sy+42)+' Z" fill="url(#bg1)"/>';
+ s+='<rect x="80" y="'+(sy+59)+'" width="30" height="5" rx="2.5" fill="#e8ecf4" opacity="0.9"/>';
+ s+='<path d="M87 '+(sy+46)+' L90 '+(sy+72)+'" stroke="#ffb3a0" stroke-width="1.4" stroke-linecap="round" opacity="0.8"/>';
+ s+='<path d="M93 '+(sy+78)+' L97 '+(sy+78)+' L96 '+(sy+90)+' L94 '+(sy+90)+' Z" fill="#9a7a52"/>';
+ s+='<circle cx="95" cy="'+(sy+93)+'" r="2.4" fill="#b9c8de"/>';
+ s+='<line x1="95" y1="'+(sy+95)+'" x2="95" y2="140" stroke="#7f92ad" stroke-width="1.2"/>';
+ s+='<line x1="94.4" y1="'+(sy+95)+'" x2="94.4" y2="140" stroke="#c9d4e8" stroke-width="0.5"/>';
+ s+='<path d="M83 140 L107 140 L103 156 L87 156 Z" fill="url(#bg2)"/>';
+ s+='<line x1="85" y1="144" x2="105" y2="144" stroke="#5f6c80" stroke-width="0.7"/>';
+ s+='<line x1="85" y1="152" x2="105" y2="152" stroke="#5f6c80" stroke-width="0.7"/>';
+ s+='<ellipse cx="95" cy="139" rx="4" ry="1.6" fill="none" stroke="#b9c8de" stroke-width="0.8"/>';
+ s+='<ellipse cx="95" cy="160" rx="4" ry="2.6" fill="none" stroke="#c8d6ea" stroke-width="0.9"/>';
+ s+='<ellipse cx="95" cy="160" rx="1.8" ry="1.2" fill="#121826"/>';
  if(m.s==="zhui"){
-   s+='<line x1="100" y1="169.6" x2="100" y2="192" stroke="#b9c8de" stroke-width="1.1"/>';
-   s+=drawHookUp(100,192);
-   s+='<text x="120" y="198" font-size="8" fill="#8fa3c0">朝天钩·钩尖朝上</text>';
+   s+='<line x1="95" y1="162.6" x2="95" y2="182" stroke="#b9c8de" stroke-width="1"/>';
+   s+='<path d="M95 182 l0 12 M95 194 q-6 2 -5 8 M90 202 l6 -4" stroke="#e6edf5" fill="none" stroke-width="1.4" stroke-linecap="round"/>';
+   s+='<path d="M95 184 l0 10 M95 194 q-6 2 -5 8" stroke="#ffffff" fill="none" stroke-width="0.5" stroke-linecap="round" opacity="0.7"/>';
+   s+='<text x="112" y="190" font-size="7" fill="#8fa3c0">朝天钩·钩尖朝上</text>';
  } else if(m.s==="flat"){
-   s+='<path d="M100 169.6 Q88 200 82 213" stroke="#b9c8de" fill="none" stroke-width="1.1"/>';
-   s+='<path d="M100 169.6 Q112 200 118 213" stroke="#b9c8de" fill="none" stroke-width="1.1"/>';
-   s+=drawHook(82,213);s+=drawHook(118,213);
-   s+='<text x="120" y="207" font-size="8" fill="#8fa3c0">双钩躺底·子线弯曲</text>';
+   s+='<path d="M95 162.6 Q83 190 78 198" stroke="#b9c8de" fill="none" stroke-width="1"/>';
+   s+='<path d="M95 162.6 Q107 192 112 200" stroke="#b9c8de" fill="none" stroke-width="1"/>';
+   s+='<path d="M70 198 l14 0 M84 198 q4 6 -1 8 M83 206 l5 -2" stroke="#e6edf5" fill="none" stroke-width="1.4" stroke-linecap="round"/>';
+   s+='<path d="M106 200 l14 0 M120 200 q4 6 -1 8 M119 208 l5 -2" stroke="#e6edf5" fill="none" stroke-width="1.4" stroke-linecap="round"/>';
+   s+='<text x="112" y="192" font-size="7" fill="#8fa3c0">双钩躺底·子线弯曲</text>';
  } else {
-   s+='<path d="M100 169.6 Q92 190 89 208" stroke="#b9c8de" fill="none" stroke-width="1.1"/>';
-   s+='<path d="M100 169.6 Q110 182 114 196" stroke="#b9c8de" fill="none" stroke-width="1.1"/>';
-   s+=drawHook(89,208);s+=drawHook(114,196);
-   s+='<text x="120" y="192" font-size="8" fill="#8fa3c0">一钩触底·一钩悬浮</text>';
+   s+='<path d="M95 162.6 Q88 182 85 196" stroke="#b9c8de" fill="none" stroke-width="1"/>';
+   s+='<path d="M95 162.6 Q104 176 107 188" stroke="#b9c8de" fill="none" stroke-width="1"/>';
+   s+='<path d="M77 196 l14 0 M91 196 q5 8 -1 11 M90 207 l6 -3" stroke="#e6edf5" fill="none" stroke-width="1.4" stroke-linecap="round"/>';
+   s+='<path d="M100 188 l14 0 M114 188 q5 8 -1 11 M113 199 l6 -3" stroke="#e6edf5" fill="none" stroke-width="1.4" stroke-linecap="round"/>';
+   s+='<text x="112" y="184" font-size="7" fill="#8fa3c0">一钩触底·一钩悬浮</text>';
  }
- s+='<text x="120" y="40" font-size="8" fill="#8fa3c0">露出 '+e+' 目</text>';
- s+='<text x="120" y="92" font-size="8" fill="#8fa3c0">漂身</text>';
- s+='<text x="120" y="156" font-size="8" fill="#8fa3c0">铅坠</text>';
- s+='<text x="120" y="176" font-size="8" fill="#8fa3c0">八字环</text>';
+ s+='<circle cx="118" cy="132" r="1.6" fill="none" stroke="#7fb3d8" stroke-width="0.7"/>';
+ s+='<circle cx="76" cy="120" r="1.2" fill="none" stroke="#7fb3d8" stroke-width="0.6"/>';
+ s+='<text x="112" y="38" font-size="7" fill="#8fa3c0">露出 '+e+' 目</text>';
+ s+='<text x="112" y="88" font-size="7" fill="#8fa3c0">漂身</text>';
+ s+='<text x="112" y="150" font-size="7" fill="#8fa3c0">铅坠</text>';
+ s+='<text x="112" y="166" font-size="7" fill="#8fa3c0">八字环</text>';
  s+='</svg>';
  document.getElementById("draw_svg").innerHTML=s;
  document.getElementById("draw_desc").textContent=m.l+" · "+m.h;
