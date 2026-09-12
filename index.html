@@ -545,8 +545,14 @@ function baitLogShare(id){var r=BL.filter(function(x){return x.id===id})[0];if(!
   "<div class='note'>把下方链接发给对方，对方打开即可看到这条配方（只读）。⚠️ 链接即公开，相当于把这条配方公布出去，请发给信任的人。</div>"+
   "<textarea readonly onfocus='this.select()' style='width:100%;min-height:80px;padding:9px;border-radius:9px;border:1px solid rgba(111,214,224,.3);background:#0f1420;color:#6fd6e0;font-size:12px;box-sizing:border-box;word-break:break-all'>"+url+"</textarea>"+
   "<button onclick='copyShare()' style='width:100%;padding:10px;border-radius:9px;border:none;background:linear-gradient(135deg,#1b6e8a,#12475c);color:#fff;font-size:13px;margin-top:8px'>📋 复制链接</button>";
- document.getElementById("share_box").style.display="block";}
-function copyShare(){var t=document.querySelector("#share_body textarea");if(!t)return;t.select();try{document.execCommand("copy");alert("链接已复制，可粘贴发送")}catch(e){alert("请手动长按复制链接")}}
+ if(navigator.share){
+  var p=navigator.share({title:"钓鱼助手 · 配方分享",text:"🎣 "+r.name+(r.mix?" | "+r.mix:""),url:url});
+  if(p&&p.catch){p.catch(function(){document.getElementById("share_box").style.display="block";});}
+ }else{
+  document.getElementById("share_box").style.display="block";
+  try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(url);alert("✅ 链接已自动复制，直接粘贴发送给朋友即可");}}catch(e){}
+ }}
+function copyShare(){var t=document.querySelector("#share_body textarea");if(!t)return;t.select();if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t.value).then(function(){alert("链接已复制，可粘贴发送")}).catch(function(){try{document.execCommand("copy");alert("链接已复制，可粘贴发送")}catch(e){alert("请手动长按复制链接")}});}else{try{document.execCommand("copy");alert("链接已复制，可粘贴发送")}catch(e){alert("请手动长按复制链接")}}}
 function closeShare(){document.getElementById("share_box").style.display="none";}
 function baitLogExport(){var blob=new Blob([JSON.stringify(BL,null,1)],{type:"application/json"});var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="baitlog_backup_"+new Date().toISOString().slice(0,10)+".json";a.click();}
 function baitLogImport(inp){var f=inp.files&&inp.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){try{var arr=JSON.parse(rd.result);if(!Array.isArray(arr))throw 0;arr.forEach(function(x){if(x&&x.name)BL.unshift(x)});blSave();alert("导入成功："+arr.length+" 条");}catch(e){alert("导入失败：文件格式不正确")}};rd.readAsText(f);inp.value="";}
