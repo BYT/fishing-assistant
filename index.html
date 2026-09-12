@@ -143,6 +143,51 @@ svg{width:100%;height:auto;display:block}
 <div class="page" id="p-jieqi">
   <div class="card"><h3>当前节气</h3><div class="body" id="jq_main">--</div></div>
   <div class="card"><h3>🍂 饵料随季节时令 · 提前推荐</h3><div class="body" id="jq_bait">--</div></div>
+
+<div class="page" id="p-baitlog">
+  <div class="card"><h3>🧪 自测饵料配方库（仅本机可见）</h3>
+    <div class="note">记录你自己试过的饵料和配方，数据只保存在本机浏览器，其他人看不到；需要分享某条时点「🔗 公布」生成只读链接。</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+      <button onclick="baitLogForm()" style="flex:1 1 96px;padding:9px 10px;border-radius:9px;border:1px solid rgba(111,214,224,.35);background:linear-gradient(135deg,#1b2a44,#0f1420);color:#6fd6e0;font-size:13px">➕ 新增配方</button>
+      <button onclick="baitLogExport()" style="flex:1 1 96px;padding:9px 10px;border-radius:9px;border:1px solid rgba(111,214,224,.3);background:#0f1420;color:#cbd5e1;font-size:13px">⬇️ 导出备份</button>
+      <button onclick="document.getElementById('bl_imp').click()" style="flex:1 1 96px;padding:9px 10px;border-radius:9px;border:1px solid rgba(111,214,224,.3);background:#0f1420;color:#cbd5e1;font-size:13px">⬆️ 导入</button>
+      <input type="file" id="bl_imp" accept=".json,application/json" style="display:none" onchange="baitLogImport(this)">
+    </div>
+  </div>
+  <div class="card" id="bl_form_card" style="display:none">
+    <h3 id="bl_form_t">新增配方</h3>
+    <div style="display:grid;gap:8px">
+      <input id="bl_name" placeholder="配方名称（必填），如：白露夜钓果酸甜腥" style="width:100%;padding:9px;border-radius:9px;border:1px solid rgba(111,214,224,.3);background:#0f1420;color:#e8ecf4;font-size:13px;box-sizing:border-box">
+      <input id="bl_mix" placeholder="材料配方，如：不空军60g+虾粉15g+九一八10g+拉丝粉5g+苹果醋3滴" style="width:100%;padding:9px;border-radius:9px;border:1px solid rgba(111,214,224,.3);background:#0f1420;color:#e8ecf4;font-size:13px;box-sizing:border-box">
+      <input id="bl_water" placeholder="总水量/水比，如：90ml（约0.9倍）" style="width:100%;padding:9px;border-radius:9px;border:1px solid rgba(111,214,224,.3);background:#0f1420;color:#e8ecf4;font-size:13px;box-sizing:border-box">
+      <input id="bl_state" placeholder="成品状态，如：柔软蓬松、能拉能搓、中速雾化" style="width:100%;padding:9px;border-radius:9px;border:1px solid rgba(111,214,224,.3);background:#0f1420;color:#e8ecf4;font-size:13px;box-sizing:border-box">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input id="bl_date" type="date" style="flex:1 1 110px;padding:9px;border-radius:9px;border:1px solid rgba(111,214,224,.3);background:#0f1420;color:#e8ecf4;font-size:13px;box-sizing:border-box">
+        <input id="bl_spot" placeholder="钓点/城市" style="flex:1 1 100px;padding:9px;border-radius:9px;border:1px solid rgba(111,214,224,.3);background:#0f1420;color:#e8ecf4;font-size:13px;box-sizing:border-box">
+      </div>
+      <input id="bl_weather" placeholder="天气条件，如：多云 24℃ 1005hPa 西南风2级" style="width:100%;padding:9px;border-radius:9px;border:1px solid rgba(111,214,224,.3);background:#0f1420;color:#e8ecf4;font-size:13px;box-sizing:border-box">
+      <input id="bl_result" placeholder="试钓效果，如：2小时鲫鱼12尾+鲤鱼1尾，雾化偏快" style="width:100%;padding:9px;border-radius:9px;border:1px solid rgba(111,214,224,.3);background:#0f1420;color:#e8ecf4;font-size:13px;box-sizing:border-box">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:12px;color:#8fa3c0">评分</span>
+        <span id="bl_stars" style="font-size:20px;cursor:pointer;color:#f5a623;letter-spacing:2px">☆☆☆☆☆</span>
+        <span id="bl_star_v" style="font-size:12px;color:#8fa3c0">0分</span>
+      </div>
+      <textarea id="bl_note" rows="2" placeholder="备注（可选）" style="width:100%;padding:9px;border-radius:9px;border:1px solid rgba(111,214,224,.3);background:#0f1420;color:#e8ecf4;font-size:13px;box-sizing:border-box;resize:vertical"></textarea>
+      <div style="display:flex;gap:8px">
+        <button onclick="baitLogSave()" style="flex:1;padding:10px;border-radius:9px;border:none;background:linear-gradient(135deg,#1b6e8a,#12475c);color:#fff;font-size:14px">💾 保存</button>
+        <button onclick="document.getElementById('bl_form_card').style.display='none'" style="flex:1;padding:10px;border-radius:9px;border:1px solid rgba(111,214,224,.3);background:#0f1420;color:#8fa3c0;font-size:14px">取消</button>
+      </div>
+    </div>
+  </div>
+  <div class="card"><h3>📋 我的记录（<span id="bl_count">0</span>）</h3><div id="baitlog_list"></div></div>
+</div>
+<div id="share_box" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(10,14,22,.94);z-index:99;overflow:auto;padding:20px;box-sizing:border-box">
+  <div style="max-width:520px;margin:0 auto">
+    <div class="card" id="share_body"></div>
+    <button onclick="closeShare()" style="width:100%;padding:11px;border-radius:10px;border:none;background:linear-gradient(135deg,#1b6e8a,#12475c);color:#fff;font-size:14px;margin-top:10px">关闭</button>
+  </div>
+</div>
+
 </div>
 
 
@@ -151,6 +196,7 @@ svg{width:100%;height:auto;display:block}
   <span data-p="tiao">🎛️ 调漂</span>
   <span data-p="bait">🧾 开饵</span>
   <span data-p="jieqi">🍂 节气</span>
+  <span data-p="baitlog">🧪 饵库</span>
 </div>
 
 <script>
@@ -446,6 +492,79 @@ function baitFuture(name,nd){
 function renderBait(){renderBaitAll();return ""}
 function renderBaitFull(){renderBaitAll();return ""}
 renderBaitPlans();renderBaitAll();
+/* ===== 自测饵料配方库（本地私有 · localStorage） ===== */
+var BL=[];try{var _bl=localStorage.getItem("fa_baitlog");if(_bl)BL=JSON.parse(_bl)||[];}catch(e){}
+function blSave(){try{localStorage.setItem("fa_baitlog",JSON.stringify(BL))}catch(e){}renderBaitLog();}
+var blStar=0,_blEditId=null;
+function blStarSet(n){blStar=n;document.getElementById("bl_stars").textContent="★★★★★".slice(0,n)+"☆☆☆☆☆".slice(0,5-n);document.getElementById("bl_star_v").textContent=n+"分";}
+function baitLogForm(){
+ var f=document.getElementById("bl_form_card"),show=f.style.display!=="block";
+ f.style.display=show?"block":"none";
+ if(show){_blEditId=null;document.getElementById("bl_form_t").textContent="新增配方";
+  ["bl_name","bl_mix","bl_water","bl_state","bl_date","bl_spot","bl_weather","bl_result","bl_note"].forEach(function(i){var e=document.getElementById(i);if(e)e.value=""});
+  blStarSet(0);document.getElementById("bl_name").focus();}
+}
+function baitLogSave(){
+ var name=document.getElementById("bl_name").value.trim();
+ if(!name){alert("请先填写配方名称");return;}
+ var rec={id:_blEditId||Date.now(),name:name,mix:document.getElementById("bl_mix").value.trim(),water:document.getElementById("bl_water").value.trim(),state:document.getElementById("bl_state").value.trim(),date:document.getElementById("bl_date").value||new Date().toISOString().slice(0,10),spot:document.getElementById("bl_spot").value.trim(),weather:document.getElementById("bl_weather").value.trim(),result:document.getElementById("bl_result").value.trim(),star:blStar,note:document.getElementById("bl_note").value.trim(),ts:Date.now()};
+ if(_blEditId){BL=BL.map(function(x){return x.id===_blEditId?rec:x});}else{BL.unshift(rec);}
+ _blEditId=null;blSave();document.getElementById("bl_form_card").style.display="none";
+}
+function renderBaitLog(){
+ var box=document.getElementById("baitlog_list"),n=document.getElementById("bl_count");if(n)n.textContent=BL.length;
+ if(!BL.length){box.innerHTML="<div class='note'>还没有记录，点「➕ 新增配方」开始记录你的自测饵料。</div>";return;}
+ box.innerHTML=BL.map(function(r){
+  var stars="★★★★★".slice(0,r.star)+"☆☆☆☆☆".slice(0,5-(r.star||0));
+  return "<div style='border:1px solid rgba(111,214,224,.18);border-radius:12px;padding:10px;margin-bottom:8px'>"+
+   "<div style='display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap'><b style='color:#e8ecf4'>"+esc(r.name)+"</b><span style='color:#f5a623;font-size:13px'>"+stars+"</span></div>"+
+   "<div style='font-size:11px;color:#8fa3c0;margin:4px 0'>"+esc(r.date)+(r.spot?" · "+esc(r.spot):"")+(r.weather?" · "+esc(r.weather):"")+"</div>"+
+   (r.mix?"<div style='font-size:12px;color:#cbd5e1;margin-top:2px'>🧪 "+esc(r.mix)+"</div>":"")+
+   (r.water?"<div style='font-size:12px;color:#cbd5e1'>💧 "+esc(r.water)+"</div>":"")+
+   (r.state?"<div style='font-size:12px;color:#cbd5e1'>✨ "+esc(r.state)+"</div>":"")+
+   (r.result?"<div style='font-size:12px;color:#cbd5e1'>🎣 "+esc(r.result)+"</div>":"")+
+   (r.note?"<div style='font-size:12px;color:#8fa3c0'>📝 "+esc(r.note)+"</div>":"")+
+   "<div style='display:flex;gap:8px;margin-top:8px;flex-wrap:wrap'>"+
+    "<button onclick='baitLogEdit("+r.id+")' style='flex:1 1 60px;padding:7px 8px;border-radius:8px;border:1px solid rgba(111,214,224,.3);background:#0f1420;color:#cbd5e1;font-size:12px'>✏️ 编辑</button>"+
+    "<button onclick='baitLogShare("+r.id+")' style='flex:1 1 60px;padding:7px 8px;border-radius:8px;border:1px solid rgba(245,166,35,.4);background:#0f1420;color:#f5a623;font-size:12px'>🔗 公布</button>"+
+    "<button onclick='baitLogDel("+r.id+")' style='flex:1 1 60px;padding:7px 8px;border-radius:8px;border:1px solid rgba(234,102,104,.4);background:#0f1420;color:#e06666;font-size:12px'>🗑️ 删除</button>"+
+   "</div></div>";
+ }).join("");
+}
+function baitLogEdit(id){var r=BL.filter(function(x){return x.id===id})[0];if(!r)return;_blEditId=id;
+ var f=document.getElementById("bl_form_card");f.style.display="block";document.getElementById("bl_form_t").textContent="编辑配方 · "+r.name;
+ var map={bl_name:"name",bl_mix:"mix",bl_water:"water",bl_state:"state",bl_date:"date",bl_spot:"spot",bl_weather:"weather",bl_result:"result",bl_note:"note"};
+ ["bl_name","bl_mix","bl_water","bl_state","bl_date","bl_spot","bl_weather","bl_result","bl_note"].forEach(function(k){var e=document.getElementById(k);if(e)e.value=r[map[k]]||""});
+ blStarSet(r.star||0);document.getElementById("bl_name").focus();}
+function baitLogDel(id){if(!confirm("确认删除这条记录？"))return;BL=BL.filter(function(x){return x.id!==id});blSave();}
+function baitLogShare(id){var r=BL.filter(function(x){return x.id===id})[0];if(!r)return;
+ var payload=btoa(String.fromCharCode.apply(null,new TextEncoder().encode(JSON.stringify({n:r.name,m:r.mix,w:r.water,s:r.state,d:r.date,p:r.spot,t:r.weather,r:r.result,st:r.star,o:r.note}))));
+ var url=location.origin+location.pathname+"#bait="+payload;
+ document.getElementById("share_body").innerHTML="<h3>🔗 配方公布链接已生成</h3>"+
+  "<div class='note'>把下方链接发给对方，对方打开即可看到这条配方（只读）。⚠️ 链接即公开，相当于把这条配方公布出去，请发给信任的人。</div>"+
+  "<textarea readonly onfocus='this.select()' style='width:100%;min-height:80px;padding:9px;border-radius:9px;border:1px solid rgba(111,214,224,.3);background:#0f1420;color:#6fd6e0;font-size:12px;box-sizing:border-box;word-break:break-all'>"+url+"</textarea>"+
+  "<button onclick='copyShare()' style='width:100%;padding:10px;border-radius:9px;border:none;background:linear-gradient(135deg,#1b6e8a,#12475c);color:#fff;font-size:13px;margin-top:8px'>📋 复制链接</button>";
+ document.getElementById("share_box").style.display="block";}
+function copyShare(){var t=document.querySelector("#share_body textarea");if(!t)return;t.select();try{document.execCommand("copy");alert("链接已复制，可粘贴发送")}catch(e){alert("请手动长按复制链接")}}
+function closeShare(){document.getElementById("share_box").style.display="none";}
+function baitLogExport(){var blob=new Blob([JSON.stringify(BL,null,1)],{type:"application/json"});var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="baitlog_backup_"+new Date().toISOString().slice(0,10)+".json";a.click();}
+function baitLogImport(inp){var f=inp.files&&inp.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){try{var arr=JSON.parse(rd.result);if(!Array.isArray(arr))throw 0;arr.forEach(function(x){if(x&&x.name)BL.unshift(x)});blSave();alert("导入成功："+arr.length+" 条");}catch(e){alert("导入失败：文件格式不正确")}};rd.readAsText(f);inp.value="";}
+(function(){var m=location.hash.match(/bait=([^&]+)/);if(m){try{var o=JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(m[1]),function(c){return c.charCodeAt(0)})));document.getElementById("share_body").innerHTML=renderShare(o);document.getElementById("share_box").style.display="block";}catch(e){}}}());
+function renderShare(o){var st="★★★★★".slice(0,o.st)+"☆☆☆☆☆".slice(0,5-(o.st||0));
+ return "<h3>🎣 "+esc(o.n)+"</h3>"+
+  "<div style='font-size:11px;color:#8fa3c0;margin:4px 0'>分享自钓友"+(o.d?" · "+esc(o.d):"")+"</div>"+
+  "<div style='font-size:12px;color:#f5a623;margin:2px 0'>"+st+"</div>"+
+  (o.m?"<div style='font-size:13px;color:#cbd5e1;margin-top:6px'>🧪 "+esc(o.m)+"</div>":"")+
+  (o.w?"<div style='font-size:13px;color:#cbd5e1'>💧 "+esc(o.w)+"</div>":"")+
+  (o.s?"<div style='font-size:13px;color:#cbd5e1'>✨ "+esc(o.s)+"</div>":"")+
+  (o.p?"<div style='font-size:12px;color:#8fa3c0'>📍 "+esc(o.p)+"</div>":"")+
+  (o.t?"<div style='font-size:12px;color:#8fa3c0'>🌤 "+esc(o.t)+"</div>":"")+
+  (o.r?"<div style='font-size:13px;color:#cbd5e1;margin-top:6px'>🎣 "+esc(o.r)+"</div>":"")+
+  (o.o?"<div style='font-size:12px;color:#8fa3c0'>📝 "+esc(o.o)+"</div>":"")+
+  "<div class='note' style='margin-top:10px'>该页面为钓友公布的配方分享，仅供交流参考。</div>";}
+document.getElementById("bl_stars").addEventListener("click",function(e){var r=document.getElementById("bl_stars").getBoundingClientRect();if(r.width)blStarSet(Math.max(1,Math.min(5,Math.ceil((e.clientX-r.left)/r.width*5))))});
+renderBaitLog();
+
 
 function renderMethods(){
  for(var k=1;k<=4;k++){var g=document.getElementById("tiao_gif_"+k);if(g)g.src="tiao-m"+(selM+1)+"-s"+k+".gif";}
