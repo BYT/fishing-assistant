@@ -778,59 +778,115 @@ document.getElementById("steps_dm").innerHTML=st.dm.map(function(s){return "<li>
 document.getElementById("steps_vm").innerHTML=st.vm.map(function(s){return "<li>"+s+"</li>"}).join("");
 }
 function renderDraw(){
- var m=METHODS[selM],w=190,h=230,e=m.e,sy=50-7*e;
- var s='<svg viewBox="0 0 '+w+' '+h+'" style="max-width:230px;margin:0 auto;display:block;background:#121826;border-radius:14px">';
- s+='<defs><linearGradient id="bg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f06a50"/><stop offset="1" stop-color="#b83a28"/></linearGradient><linearGradient id="bg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b9c8de"/><stop offset="1" stop-color="#7c8aa0"/></linearGradient></defs>';
- s+='<path d="M18 50 q8 -4 16 0 t16 0 t16 0 t16 0 t16 0 t16 0 t16 0 t16 0 t12 0" stroke="#4a8fb8" fill="none" stroke-width="1.2" stroke-linecap="round"/>';
- s+='<text x="24" y="42" font-size="7" fill="#6fb6d8">水面</text>';
- s+='<ellipse cx="95" cy="50" rx="16" ry="3" fill="none" stroke="#6fb6d8" stroke-width="0.7" opacity="0.7"/>';
- s+='<line x1="16" y1="200" x2="174" y2="200" stroke="#4a5a78" stroke-width="1.2"/>';
- s+='<circle cx="30" cy="203" r="1.6" fill="#3f4f6b"/><circle cx="50" cy="197" r="1.2" fill="#3d4a63"/><circle cx="72" cy="203" r="1.6" fill="#3f4f6b"/><circle cx="130" cy="197" r="1.4" fill="#3d4a63"/><circle cx="150" cy="203" r="1.6" fill="#3f4f6b"/>';
- s+='<path d="M60 200 q-4 -18 0 -34" stroke="#2f6b4f" fill="none" stroke-width="1.6"/>';
- s+='<path d="M140 200 q4 -16 0 -30" stroke="#2f6b4f" fill="none" stroke-width="1.4"/>';
- s+='<text x="86" y="216" font-size="7" fill="#8fa3c0">水底</text>';
- var y=sy;
- for(var i=0;i<6;i++){var col=y>=50?"#3d4a63":(i%2?"#2e9e4f":"#e04444");s+='<rect x="93" y="'+y+'" width="4" height="7" fill="'+col+'"/>';y+=7;}
- s+='<rect x="92" y="'+(sy-2)+'" width="6" height="3" rx="1.5" fill="#e04444"/>';
- s+='<path d="M95 '+(sy+42)+' C82 '+(sy+49)+' 80 '+(sy+62)+' 83 '+(sy+72)+' C86 '+(sy+77)+' 90 '+(sy+78)+' 95 '+(sy+78)+' C100 '+(sy+78)+' 104 '+(sy+77)+' 107 '+(sy+72)+' C110 '+(sy+62)+' 108 '+(sy+49)+' 95 '+(sy+42)+' Z" fill="url(#bg1)"/>';
- s+='<rect x="80" y="'+(sy+59)+'" width="30" height="5" rx="2.5" fill="#e8ecf4" opacity="0.9"/>';
- s+='<path d="M87 '+(sy+46)+' L90 '+(sy+72)+'" stroke="#ffb3a0" stroke-width="1.4" stroke-linecap="round" opacity="0.8"/>';
- s+='<path d="M93 '+(sy+78)+' L97 '+(sy+78)+' L96 '+(sy+90)+' L94 '+(sy+90)+' Z" fill="#9a7a52"/>';
- s+='<circle cx="95" cy="'+(sy+93)+'" r="2.4" fill="#b9c8de"/>';
- s+='<line x1="95" y1="'+(sy+95)+'" x2="95" y2="140" stroke="#7f92ad" stroke-width="1.2"/>';
- s+='<line x1="94.4" y1="'+(sy+95)+'" x2="94.4" y2="140" stroke="#c9d4e8" stroke-width="0.5"/>';
- s+='<path d="M83 140 L107 140 L103 156 L87 156 Z" fill="url(#bg2)"/>';
- s+='<line x1="85" y1="144" x2="105" y2="144" stroke="#5f6c80" stroke-width="0.7"/>';
- s+='<line x1="85" y1="152" x2="105" y2="152" stroke="#5f6c80" stroke-width="0.7"/>';
- s+='<ellipse cx="95" cy="139" rx="4" ry="1.6" fill="none" stroke="#b9c8de" stroke-width="0.8"/>';
- s+='<ellipse cx="95" cy="160" rx="4" ry="2.6" fill="none" stroke="#c8d6ea" stroke-width="0.9"/>';
- s+='<ellipse cx="95" cy="160" rx="1.8" ry="1.2" fill="#121826"/>';
- if(m.s==="zhui"){
-   s+='<line x1="95" y1="162.6" x2="95" y2="182" stroke="#b9c8de" stroke-width="1"/>';
-   s+='<path d="M95 182 l0 12 M95 194 q-6 2 -5 8 M90 202 l6 -4" stroke="#e6edf5" fill="none" stroke-width="1.4" stroke-linecap="round"/>';
-   s+='<path d="M95 184 l0 10 M95 194 q-6 2 -5 8" stroke="#ffffff" fill="none" stroke-width="0.5" stroke-linecap="round" opacity="0.7"/>';
-   s+='<text x="112" y="190" font-size="7" fill="#8fa3c0">朝天钩·钩尖朝上</text>';
- } else if(m.s==="flat"){
-   s+='<path d="M95 162.6 Q83 190 78 198" stroke="#b9c8de" fill="none" stroke-width="1"/>';
-   s+='<path d="M95 162.6 Q107 192 112 200" stroke="#b9c8de" fill="none" stroke-width="1"/>';
-   s+='<path d="M70 198 l14 0 M84 198 q4 6 -1 8 M83 206 l5 -2" stroke="#e6edf5" fill="none" stroke-width="1.4" stroke-linecap="round"/>';
-   s+='<path d="M106 200 l14 0 M120 200 q4 6 -1 8 M119 208 l5 -2" stroke="#e6edf5" fill="none" stroke-width="1.4" stroke-linecap="round"/>';
-   s+='<text x="112" y="192" font-size="7" fill="#8fa3c0">双钩躺底·子线弯曲</text>';
- } else {
-   s+='<path d="M95 162.6 Q88 182 85 196" stroke="#b9c8de" fill="none" stroke-width="1"/>';
-   s+='<path d="M95 162.6 Q104 176 107 188" stroke="#b9c8de" fill="none" stroke-width="1"/>';
-   s+='<path d="M77 196 l14 0 M91 196 q5 8 -1 11 M90 207 l6 -3" stroke="#e6edf5" fill="none" stroke-width="1.4" stroke-linecap="round"/>';
-   s+='<path d="M100 188 l14 0 M114 188 q5 8 -1 11 M113 199 l6 -3" stroke="#e6edf5" fill="none" stroke-width="1.4" stroke-linecap="round"/>';
-   s+='<text x="112" y="184" font-size="7" fill="#8fa3c0">一钩触底·一钩悬浮</text>';
+ var m=METHODS[selM],e=m.e,s=m.s;
+ var W=320,H=400,x=160,wy=80,by=354,gr=7,tl=63;
+ var t0=wy-e*gr;        // 漂尾顶端（露出 e 目，每目 gr 像素）
+ var t1=t0+tl;          // 漂身顶
+ var t2=t1+46;          // 漂身底
+ var t3=t2+30;          // 漂脚底
+ var zb=242,bh=274;     // 铅皮座、八字环
+ var A='<svg viewBox="0 0 '+W+' '+H+'" style="max-width:252px;margin:0 auto;display:block;border-radius:16px">';
+ A+='<defs>'
+  +'<linearGradient id="dgSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a2130"/><stop offset="1" stop-color="#26354a"/></linearGradient>'
+  +'<linearGradient id="dgWater" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#14405c"/><stop offset="0.55" stop-color="#0d2c42"/><stop offset="1" stop-color="#0a1e30"/></linearGradient>'
+  +'<linearGradient id="dgBody" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8f2b22"/><stop offset="0.5" stop-color="#d94f3e"/><stop offset="1" stop-color="#7c241c"/></linearGradient>'
+  +'<linearGradient id="dgFoot" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eef2f8"/><stop offset="1" stop-color="#8b97ab"/></linearGradient>'
+  +'<linearGradient id="dgMud" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a3a26"/><stop offset="1" stop-color="#2c2215"/></linearGradient>'
+  +'<radialGradient id="dgBub" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#8fc4e0"/><stop offset="1" stop-color="#0d2c42"/></radialGradient>'
+  +'</defs>';
+ // 背景分层：空气 / 水体 / 底泥
+ A+='<rect x="0" y="0" width="'+W+'" height="'+wy+'" fill="url(#dgSky)"/>';
+ A+='<rect x="0" y="'+wy+'" width="'+W+'" height="'+(by-wy)+'" fill="url(#dgWater)"/>';
+ A+='<rect x="0" y="'+by+'" width="'+W+'" height="'+(H-by)+'" fill="url(#dgMud)"/>';
+ // 水面波浪 + 涟漪
+ A+='<path d="M6 '+wy+' q10 -5 20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t14 0" stroke="#4f90b8" fill="none" stroke-width="1.3" stroke-linecap="round" opacity="0.9"/>';
+ A+='<ellipse cx="66" cy="'+(wy+2)+'" rx="13" ry="2.2" fill="none" stroke="#5f9cc2" stroke-width="0.8" opacity="0.55"/><ellipse cx="66" cy="'+(wy+2)+'" rx="21" ry="3.4" fill="none" stroke="#5f9cc2" stroke-width="0.6" opacity="0.3"/>';
+ A+='<ellipse cx="252" cy="'+(wy+2)+'" rx="11" ry="1.9" fill="none" stroke="#5f9cc2" stroke-width="0.8" opacity="0.5"/><ellipse cx="252" cy="'+(wy+2)+'" rx="19" ry="2.9" fill="none" stroke="#5f9cc2" stroke-width="0.6" opacity="0.28"/>';
+ // 浮漂穿水张力圈
+ A+='<ellipse cx="'+x+'" cy="'+wy+'" rx="10" ry="2.2" fill="none" stroke="#8fd0ea" stroke-width="1" opacity="0.9"/><ellipse cx="'+x+'" cy="'+wy+'" rx="16" ry="3.2" fill="none" stroke="#8fd0ea" stroke-width="0.7" opacity="0.5"/>';
+ // 漂尾：红黄目格，露水面亮、水下暗
+ for(var i=0;i<10;i++){
+   var y0=t0+i*gr,y1=Math.min(t0+tl,y0+gr);
+   if(y0>=t0+tl)break;
+   var up=y0<wy;
+   var col=up?(i%2?"#e8b23a":"#e04444"):(i%2?"#46546c":"#3a475c");
+   var w2=1.8+(i/(tl/gr))*1.3;
+   A+='<rect x="'+(x-w2/2)+'" y="'+y0+'" width="'+w2+'" height="'+(y1-y0-1)+'" fill="'+col+'"/>';
  }
- s+='<circle cx="118" cy="132" r="1.6" fill="none" stroke="#7fb3d8" stroke-width="0.7"/>';
- s+='<circle cx="76" cy="120" r="1.2" fill="none" stroke="#7fb3d8" stroke-width="0.6"/>';
- s+='<text x="112" y="38" font-size="7" fill="#8fa3c0">露出 '+e+' 目</text>';
- s+='<text x="112" y="88" font-size="7" fill="#8fa3c0">漂身</text>';
- s+='<text x="112" y="150" font-size="7" fill="#8fa3c0">铅坠</text>';
- s+='<text x="112" y="166" font-size="7" fill="#8fa3c0">八字环</text>';
- s+='</svg>';
- document.getElementById("draw_svg").innerHTML=s;
+ A+='<circle cx="'+x+'" cy="'+(t0+2)+'" r="1.7" fill="#e04444"/>';
+ A+='<line x1="'+(x+0.7)+'" y1="'+t0+'" x2="'+(x+0.9)+'" y2="'+(t0+tl)+'" stroke="rgba(255,255,255,0.35)" stroke-width="0.7"/>';
+ // 漂身（枣核形 + 高光 + 金色分界环）
+ A+='<path d="M'+(x-13)+' '+t1+' Q'+(x-9)+' '+(t1+14)+' '+(x-7.5)+' '+(t1+22)+' Q'+(x-5)+' '+(t2-6)+' '+(x-3.5)+' '+t2+' L'+(x+3.5)+' '+t2+' Q'+(x+5)+' '+(t2-6)+' '+(x+7.5)+' '+(t1+22)+' Q'+(x+9)+' '+(t1+14)+' '+(x+13)+' '+t1+' Z" fill="url(#dgBody)" stroke="#5e1a14" stroke-width="0.8"/>';
+ A+='<path d="M'+(x-5.5)+' '+(t1+6)+' Q'+(x-4)+' '+(t1+18)+' '+(x-3)+' '+(t2-8)+'" stroke="rgba(255,190,170,0.55)" fill="none" stroke-width="1.6" stroke-linecap="round"/>';
+ A+='<ellipse cx="'+x+'" cy="'+(t1+16)+'" rx="10.5" ry="2.2" fill="none" stroke="#e8c766" stroke-width="1" opacity="0.85"/>';
+ // 漂脚
+ A+='<rect x="'+(x-2)+'" y="'+t2+'" width="4" height="'+(t3-t2)+'" fill="url(#dgFoot)"/>';
+ A+='<circle cx="'+x+'" cy="'+(t3+2)+'" r="2" fill="#9db0c6"/>';
+ // 主线（带高光）
+ A+='<line x1="'+x+'" y1="'+(t3+3)+'" x2="'+x+'" y2="'+(zb-8)+'" stroke="#7f92ad" stroke-width="1.1"/>';
+ A+='<line x1="'+(x+0.7)+'" y1="'+(t3+3)+'" x2="'+(x+0.7)+'" y2="'+(zb-8)+'" stroke="#c9d4e8" stroke-width="0.4" opacity="0.8"/>';
+ // 漂座 + 太空豆（上2下2）
+ A+='<rect x="'+(x-4.5)+'" y="'+(t3+5)+'" width="9" height="9" rx="1.5" fill="#2e3c52" stroke="#4a5a72" stroke-width="0.8"/>';
+ var beans=["#d94f3e","#e8b23a","#5cb3d8","#8a6ad8"];
+ for(var b2=0;b2<4;b2++){A+='<ellipse cx="'+x+'" cy="'+(t3+16+b2*6)+'" rx="3.2" ry="2.5" fill="'+beans[b2]+'" stroke="rgba(255,255,255,0.25)" stroke-width="0.5"/>';}
+ // 铅皮座（螺纹柱）+ 铅皮卷
+ A+='<rect x="'+(x-3.5)+'" y="'+(zb-8)+'" width="7" height="20" rx="1.5" fill="#b9c6d4" stroke="#7c8aa0" stroke-width="0.7"/>';
+ for(var k2=0;k2<4;k2++){A+='<line x1="'+(x-3.5)+'" y1="'+(zb-4+k2*4.6)+'" x2="'+(x+3.5)+'" y2="'+(zb-3+k2*4.6)+'" stroke="#6d7a90" stroke-width="0.7"/>';}
+ A+='<path d="M'+(x-5)+' '+(zb+1)+' Q'+(x-7)+' '+(zb+9)+' '+(x-5)+' '+(zb+17)+' L'+(x-2.5)+' '+(zb+17)+' L'+(x-2.5)+' '+(zb+1)+' Z" fill="#3d4757"/>';
+ A+='<path d="M'+(x+5)+' '+(zb+1)+' Q'+(x+7)+' '+(zb+9)+' '+(x+5)+' '+(zb+17)+' L'+(x+2.5)+' '+(zb+17)+' L'+(x+2.5)+' '+(zb+1)+' Z" fill="#4a5668"/>';
+ A+='<line x1="'+(x-4)+'" y1="'+(zb+3)+'" x2="'+(x+4)+'" y2="'+(zb+3)+'" stroke="rgba(255,255,255,0.3)" stroke-width="0.8"/>';
+ // 主线至八字环
+ A+='<line x1="'+x+'" y1="'+(zb+12)+'" x2="'+x+'" y2="'+(bh-4)+'" stroke="#7f92ad" stroke-width="1"/>';
+ // 八字环（双环）
+ A+='<ellipse cx="'+x+'" cy="'+(bh+4)+'" rx="4.5" ry="5" fill="none" stroke="#c3cfdf" stroke-width="1.4"/>';
+ A+='<ellipse cx="'+x+'" cy="'+(bh+4)+'" rx="2.2" ry="5.2" fill="none" stroke="#e6edf5" stroke-width="0.7"/>';
+ A+='<circle cx="'+x+'" cy="'+(bh-3)+'" r="1.6" fill="#7f92ad"/>';
+ // ===== 子线 + 钩 + 饵（按状态） =====
+ var L="#8a97ad",LW=0.95,Hk="#cfd8e6";
+ if(s==="zhui"){
+   A+='<line x1="'+x+'" y1="'+(bh+9)+'" x2="'+x+'" y2="'+(by-14)+'" stroke="'+L+'" stroke-width="'+LW+'"/>';
+   A+='<circle cx="'+x+'" cy="'+(by-10)+'" r="4.2" fill="#3d4757" stroke="#5a6a80" stroke-width="0.6"/>';
+   A+='<line x1="'+x+'" y1="'+(by-6)+'" x2="'+x+'" y2="'+(by-2)+'" stroke="'+L+'" stroke-width="0.7"/>';
+   A+='<path d="M'+(x-3)+' '+(by-2)+' L'+(x-3)+' '+(by-23)+' q-1.2 -3 -4 -3 M'+(x-4)+' '+(by-26)+' l-1 -3" stroke="'+Hk+'" fill="none" stroke-width="1.4" stroke-linecap="round"/>';
+   A+='<circle cx="'+(x-3)+'" cy="'+(by-20)+'" r="3.4" fill="url(#dgBody)"/>';
+   A+='<path d="M'+(x+1)+' '+(by-4)+' q6 -8 2 -14 q-3 -5 4 -7" stroke="#c0564a" fill="none" stroke-width="2.6" stroke-linecap="round"/>';
+   A+='<text x="'+(x+13)+'" y="'+(by-28)+'" font-size="8.5" fill="#9fb4c8">朝天钩·钩尖朝上</text>';
+ } else if(s==="flat"){
+   A+='<path d="M'+x+' '+(bh+9)+' Q'+(x-16)+' '+(bh+30)+' '+(x-24)+' '+(by-8)+'" stroke="'+L+'" fill="none" stroke-width="'+LW+'"/>';
+   A+='<path d="M'+x+' '+(bh+9)+' Q'+(x+16)+' '+(bh+32)+' '+(x+24)+' '+(by-6)+'" stroke="'+L+'" fill="none" stroke-width="'+LW+'"/>';
+   A+='<path d="M'+(x-24)+' '+(by-8)+' L'+(x-40)+' '+(by-6)+' q-6 0 -8 4 M'+(x-48)+' '+(by-2)+' l-4 2" stroke="'+Hk+'" fill="none" stroke-width="1.3" stroke-linecap="round"/>';
+   A+='<ellipse cx="'+(x-20)+'" cy="'+(by-6)+'" rx="7" ry="4.4" fill="url(#dgBody)" stroke="#5e1a14" stroke-width="0.6" opacity="0.92"/><circle cx="'+(x-22)+'" cy="'+(by-7)+'" r="1.2" fill="rgba(255,190,170,0.5)"/>';
+   A+='<path d="M'+(x+24)+' '+(by-6)+' L'+(x+40)+' '+(by-6)+' q6 0 8 4 M'+(x+48)+' '+(by-2)+' l4 2" stroke="'+Hk+'" fill="none" stroke-width="1.3" stroke-linecap="round"/>';
+   A+='<ellipse cx="'+(x+20)+'" cy="'+(by-6)+'" rx="7" ry="4.4" fill="url(#dgBody)" stroke="#5e1a14" stroke-width="0.6" opacity="0.92"/><circle cx="'+(x+18)+'" cy="'+(by-7)+'" r="1.2" fill="rgba(255,190,170,0.5)"/>';
+   A+='<text x="'+(x+13)+'" y="'+(by-32)+'" font-size="8.5" fill="#9fb4c8">双钩躺底·子线弯曲</text>';
+ } else {
+   A+='<path d="M'+x+' '+(bh+9)+' L'+(x-10)+' '+(by-36)+'" stroke="'+L+'" fill="none" stroke-width="'+LW+'"/>';
+   A+='<path d="M'+x+' '+(bh+9)+' Q'+(x+8)+' '+(bh+24)+' '+(x+12)+' '+(by-8)+'" stroke="'+L+'" fill="none" stroke-width="'+LW+'"/>';
+   A+='<path d="M'+(x-10)+' '+(by-36)+' L'+(x-22)+' '+(by-48)+' q-4 -1 -6 2 M'+(x-28)+' '+(by-46)+' l-3 4" stroke="'+Hk+'" fill="none" stroke-width="1.3" stroke-linecap="round"/>';
+   A+='<ellipse cx="'+(x-8)+'" cy="'+(by-33)+'" rx="6.4" ry="4.2" fill="url(#dgBody)" stroke="#5e1a14" stroke-width="0.6"/><circle cx="'+(x-10)+'" cy="'+(by-34)+'" r="1.1" fill="rgba(255,190,170,0.5)"/>';
+   A+='<path d="M'+(x+12)+' '+(by-8)+' L'+(x-2)+' '+(by-6)+' q-6 0 -8 4 M'+(x-10)+' '+(by-2)+' l-4 2" stroke="'+Hk+'" fill="none" stroke-width="1.3" stroke-linecap="round"/>';
+   A+='<ellipse cx="'+(x+7)+'" cy="'+(by-6)+'" rx="6.8" ry="4.4" fill="url(#dgBody)" stroke="#5e1a14" stroke-width="0.6"/><circle cx="'+(x+5)+'" cy="'+(by-7)+'" r="1.2" fill="rgba(255,190,170,0.5)"/>';
+   A+='<text x="'+(x+13)+'" y="'+(by-56)+'" font-size="8.5" fill="#9fb4c8">一钩触底·一钩悬浮</text>';
+ }
+ // 水底：石子 + 水草
+ A+='<circle cx="44" cy="'+(by+8)+'" r="5" fill="#5a4a30" opacity="0.7"/><circle cx="50" cy="'+(by+9)+'" r="3.8" fill="#4a3a26" opacity="0.7"/>';
+ A+='<ellipse cx="274" cy="'+(by+10)+'" rx="8" ry="4.6" fill="#4a3a26" opacity="0.6"/>';
+ A+='<path d="M64 '+by+' q-6 -14 2 -20 q6 -5 -2 -12 M72 '+by+' q4 -10 -2 -16 M58 '+by+' q2 -8 -2 -12" stroke="#2f6b4f" fill="none" stroke-width="1.4" stroke-linecap="round" opacity="0.85"/>';
+ A+='<path d="M282 '+by+' q-5 -12 2 -18 q5 -4 -2 -10" stroke="#2f6b4f" fill="none" stroke-width="1.2" stroke-linecap="round" opacity="0.7"/>';
+ // 气泡上浮（轻动画）
+ A+='<circle cx="118" cy="'+(by-30)+'" r="2" fill="url(#dgBub)"><animate attributeName="cy" values="'+(by-30)+';'+(wy+20)+'" dur="3.5s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.9;0.1" dur="3.5s" repeatCount="indefinite"/></circle>';
+ A+='<circle cx="206" cy="'+(by-46)+'" r="1.6" fill="url(#dgBub)"><animate attributeName="cy" values="'+(by-46)+';'+(wy+20)+'" dur="4.6s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.8;0.1" dur="4.6s" repeatCount="indefinite"/></circle>';
+ // 标注
+ A+='<text x="'+(x+16)+'" y="'+(t0+9)+'" font-size="9" fill="#d6deeb">露出 '+e+' 目</text>';
+ A+='<text x="'+(x+16)+'" y="'+(t1+22)+'" font-size="8" fill="#8fa3c0">漂身</text>';
+ A+='<text x="'+(x+16)+'" y="'+(t2+20)+'" font-size="8" fill="#8fa3c0">漂脚</text>';
+ A+='<text x="'+(x+16)+'" y="'+(zb+11)+'" font-size="8" fill="#8fa3c0">铅坠</text>';
+ A+='<text x="'+(x+16)+'" y="'+(bh+9)+'" font-size="8" fill="#8fa3c0">八字环</text>';
+ A+='<text x="'+(x-42)+'" y="'+Math.round((t3+zb)/2)+'" font-size="7.5" fill="#6fa0bd">主线</text>';
+ A+='<text x="10" y="'+(wy-6)+'" font-size="8" fill="#6fb6d8">水面</text>';
+ A+='<text x="10" y="'+(by+14)+'" font-size="8" fill="#a98d5f">水底</text>';
+ A+='</svg>';
+ document.getElementById("draw_svg").innerHTML=A;
  document.getElementById("draw_desc").textContent=m.l+" · "+m.h;
 }
 renderMethods();renderDraw();
