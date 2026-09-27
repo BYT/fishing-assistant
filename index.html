@@ -816,9 +816,9 @@ function renderDraw(){
  A+='<circle cx="'+x+'" cy="'+(t0+3)+'" r="2.4" fill="#ff5a4a" stroke="#fff2e0" stroke-width="0.5" opacity="0.95"/>';
  A+='<line x1="'+(x+0.8)+'" y1="'+t0+'" x2="'+(x+1)+'" y2="'+(t0+tl)+'" stroke="rgba(255,255,255,0.3)" stroke-width="0.5"/>';
  // 漂身（水滴形·上宽下尖 + 高光 + 金色分界环）
- A+='<path d="M'+(x-15)+' '+(t1+2)+' Q'+(x-13)+' '+(t1+13)+' '+(x-9)+' '+(t1+21)+' Q'+(x-5.5)+' '+(t2-9)+' '+(x-2)+' '+t2+' L'+(x+2)+' '+t2+' Q'+(x+5.5)+' '+(t2-9)+' '+(x+9)+' '+(t1+21)+' Q'+(x+13)+' '+(t1+13)+' '+(x+15)+' '+(t1+2)+' Z" fill="url(#dgBody)" stroke="#5e1a14" stroke-width="0.8"/>';
- A+='<path d="M'+(x-6.5)+' '+(t1+6)+' Q'+(x-5)+' '+(t1+17)+' '+(x-2.5)+' '+(t2-8)+'" stroke="rgba(255,190,170,0.55)" fill="none" stroke-width="1.6" stroke-linecap="round"/>';
- A+='<ellipse cx="'+x+'" cy="'+(t1+13)+'" rx="12.5" ry="2.2" fill="none" stroke="#e8c766" stroke-width="1" opacity="0.85"/>';
+ A+='<path d="M'+(x-9)+' '+t1+' Q'+(x-14)+' '+(t1+5)+' '+(x-15)+' '+(t1+11)+' L'+(x-15)+' '+(t1+19)+' Q'+(x-15)+' '+(t1+27)+' '+(x-9)+' '+(t1+35)+' Q'+(x-4)+' '+(t1+41)+' '+(x-1.5)+' '+t2+' L'+(x+1.5)+' '+t2+' Q'+(x+4)+' '+(t1+41)+' '+(x+9)+' '+(t1+35)+' Q'+(x+15)+' '+(t1+27)+' '+(x+15)+' '+(t1+19)+' L'+(x+15)+' '+(t1+11)+' Q'+(x+14)+' '+(t1+5)+' '+(x+9)+' '+t1+' Z" fill="url(#dgBody)" stroke="#5e1a14" stroke-width="0.8"/>';
+ A+='<path d="M'+(x-6)+' '+(t1+4)+' Q'+(x-6.5)+' '+(t1+20)+' '+(x-2.5)+' '+(t2-6)+'" stroke="rgba(255,190,170,0.55)" fill="none" stroke-width="1.6" stroke-linecap="round"/>';
+ A+='<ellipse cx="'+x+'" cy="'+(t1+15)+'" rx="13.5" ry="2.2" fill="none" stroke="#e8c766" stroke-width="1" opacity="0.85"/>';
  // 漂脚（长脚）
  A+='<rect x="'+(x-1.7)+'" y="'+t2+'" width="3.4" height="'+(t3-t2)+'" fill="url(#dgFoot)"/>';
  A+='<circle cx="'+x+'" cy="'+(t3+2)+'" r="2" fill="#9db0c6"/>';
@@ -879,8 +879,8 @@ function renderDraw(){
  // 标注
  A+='<text x="'+(x+16)+'" y="'+(t0+9)+'" font-size="9" fill="#d6deeb">露出 '+e+' 目</text>';
  A+='<text x="'+(x-64)+'" y="'+(t0+24)+'" font-size="8" fill="#9fb4c8">细长尾</text>';
- A+='<text x="'+(x+16)+'" y="'+(t1+22)+'" font-size="8" fill="#8fa3c0">漂身</text>';
- A+='<text x="'+(x+16)+'" y="'+(t1+42)+'" font-size="8" fill="#c8b26a">3g 吃铅</text>';
+ A+='<text x="'+(x+16)+'" y="'+(t1+16)+'" font-size="8" fill="#8fa3c0">漂身</text>';
+ A+='<text x="'+(x+16)+'" y="'+(t1+36)+'" font-size="8" fill="#c8b26a">3g 吃铅</text>';
  A+='<text x="'+(x+16)+'" y="'+(t2+24)+'" font-size="8" fill="#8fa3c0">漂脚·长</text>';
  A+='<text x="'+(x+16)+'" y="'+(zb+12)+'" font-size="8" fill="#8fa3c0">铅坠</text>';
  A+='<text x="'+(x+16)+'" y="'+(bh+6)+'" font-size="8" fill="#8fa3c0">八字环</text>';
