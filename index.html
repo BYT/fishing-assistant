@@ -82,6 +82,14 @@ svg{width:100%;height:auto;display:block}
 </div>
 <div class="warn" id="walarm" style="display:none"></div>
   <div class="note" style="margin:0 0 10px">📡 鱼情判断已按 <b style="color:#6fd6e0">实时气压 / 湿度 / 风力 / 水温</b> 动态调整，直连气象数据，每 15 分钟自动刷新</div>
+  <div class="card"><h3>🕐 今日逐小时鱼口评分 + 黄金时段</h3>
+    <div class="body" id="hourly_score">--</div>
+    <div class="note" id="hourly_note"></div>
+  </div>
+  <div class="card"><h3>📈 24h 气压趋势 + 低压预警</h3>
+    <div id="pressure_svg"></div>
+    <div class="body" id="pressure_verdict">--</div>
+  </div>
   <div class="card"><h3>🎯 今日出钓指数（气压·湿度·温差·风力·溶氧·节气）</h3><div class="body" id="score_card">--</div></div>
   <div class="grid3">
     <div class="g3"><div class="v" id="fP">--</div><div class="k">气压 hPa</div></div>
@@ -484,6 +492,98 @@ function renderFish(d){
  }).join(""):"暂无3天数据";
 }
 
+/* ===== P0: 逐小时鱼口评分 + 24h气压趋势/低压预警 ===== */
+function hourScore(h,df){
+ var s=60,p=parseFloat(h.p),hum=parseInt(h.hum),t=parseFloat(h.t),wn=parseInt(h.wind)||0,rain=parseFloat(h.rain)||0;
+ if(isNaN(p)||isNaN(hum)||isNaN(t))return null;
+ if(p>=1025)s+=10;else if(p>=1010)s+=6;else if(p>=1000)s+=0;else s-=12;
+ if(hum>=50&&hum<70)s+=6;else if(hum>=70&&hum<85)s+=3;else if(hum>=85&&hum<95)s-=4;else if(hum>=95)s-=8;else if(hum>=30&&hum<50)s+=2;else s-=4;
+ if(!isNaN(df)){if(df>=6&&df<=10)s+=6;else if(df>10&&df<=14)s+=2;else if(df>14)s-=4;else s-=3}
+ if(wn>=1&&wn<=3)s+=6;else if(wn===4)s+=2;else if(wn===5)s-=4;else if(wn>5)s-=10;else s-=2;
+ if(rain>0)s+=3;
+ if(t>=15&&t<=28)s+=6;else if((t>=8&&t<15)||(t>28&&t<=32))s+=2;else if(t>32||t<8)s-=5;
+ var dol=doEst(t).low;if(!isNaN(parseFloat(dol))){if(parseFloat(dol)>=6)s+=4;else if(parseFloat(dol)>=5)s+=2;else s-=4}
+ return Math.max(0,Math.min(100,Math.round(s)));
+}
+function goldWindows(arr){
+ var segs=[],i=0;
+ while(i<arr.length){
+  if(arr[i].s>=65){var j=i;while(j<arr.length&&arr[j].s>=60)j++;segs.push([i,j-1]);i=j;}else i++;
+ }
+ if(!segs.length)return[];
+ var merged=[segs[0]];
+ for(var k=1;k<segs.length;k++){var last=merged[merged.length-1];if(segs[k][0]-last[1]<=2){last[1]=segs[k][1];}else merged.push(segs[k]);}
+ return merged.filter(function(g){return g[1]-g[0]+1>=2});
+}
+function fmtHour(h){return ("0"+h).slice(-2)+":00"}
+function renderHourlyScore(x,today){
+ var box=document.getElementById("hourly_score");if(!box)return;
+ var hd=x.hourly||{};
+ var df=parseFloat(today.high)-parseFloat(today.low);
+ var arr=[];
+ if(hd.time&&hd.temperature_2m)for(var i=0;i<Math.min(24,hd.time.length);i++){
+  var sc=hourScore({p:hd.pressure_msl[i],hum:hd.relative_humidity_2m[i],t:hd.temperature_2m[i],wind:windLevel(hd.wind_speed_10m[i]),rain:hd.precipitation[i]},df);
+  arr.push({h:i,s:sc});
+ }
+ if(!arr.length){box.innerHTML="暂无逐小时数据";return;}
+ var wins=goldWindows(arr);
+ var bars="";
+ for(var i2=0;i2<arr.length;i2++){
+  var a=arr[i2],c=a.s>=75?"#52c41a":a.s>=60?"#6fd6e0":a.s>=45?"#f59e0b":"#e06666";
+  var hh=Math.max(6,Math.round(a.s/100*92));
+  bars+='<div style="flex:1;display:flex;align-items:flex-end;justify-content:center;height:100px;position:relative">'+
+   '<div style="width:60%;max-width:12px;height:'+hh+'px;border-radius:3px 3px 0 0;background:'+c+';'+(a.s>=65?'box-shadow:0 0 6px '+c:'')+'"></div>'+
+   '</div>';
+ }
+ var tline='<div style="display:flex;justify-content:space-between;font-size:10px;color:#8fa3c0;margin-top:4px"><span>0点</span><span>6点</span><span>12点</span><span>18点</span><span>23点</span></div>';
+ var winHtml=wins.length?wins.map(function(g){return "<b style='color:#52c41a'>"+fmtHour(g[0])+"-"+fmtHour(g[1]+1)+"</b>（"+arr[g[0]].s+"~"+arr[g[1]].s+"分）"}).join(" · "):"暂无明确黄金窗口，建议按「最佳出钓」时段作钓";
+ box.innerHTML='<div style="display:flex;align-items:flex-end;gap:2px;height:104px">'+bars+'</div>'+tline+
+  '<div style="margin-top:8px">🕐 黄金窗口：'+winHtml+'</div>';
+ var note=document.getElementById("hourly_note");
+ if(note)note.textContent="逐小时鱼口分 = 气压/湿度/温差/风力/降水/水温/下层溶氧 加权估算（0-100），≥65 分视为黄金窗口；仅供参考，非实测。";
+}
+function renderPressureTrend(x){
+ var box=document.getElementById("pressure_svg");if(!box)return;
+ var hd=x.hourly||{};
+ var ps=hd.pressure_msl||[];
+ if(!ps.length){box.innerHTML="<div class='note'>暂无气压趋势数据</div>";return;}
+ var vals=ps.slice(0,24).map(function(v){return parseFloat(v)});
+ var min=Math.min.apply(null,vals),max=Math.max.apply(null,vals);
+ var lo=Math.min(min,990),hi=Math.max(max,1030);
+ function yy(v){return 130-(v-lo)/(hi-lo)*110}
+ var w=560,pad=6,step=(w-pad*2)/(vals.length-1);
+ var pts=vals.map(function(v,i){return (pad+i*step).toFixed(1)+","+yy(v).toFixed(1)}).join(" ");
+ var s='<svg viewBox="0 0 560 140" style="max-width:520px;margin:0 auto">';
+ var y1000=yy(1000);
+ s+='<line x1="'+pad+'" y1="'+y1000+'" x2="'+(w-pad)+'" y2="'+y1000+'" stroke="#e06666" stroke-width="1.2" stroke-dasharray="5 4"/>';
+ s+='<text x="'+(w-pad)+'" y="'+(y1000-3)+'" font-size="9" fill="#e06666" text-anchor="end">1000 低压线</text>';
+ s+='<polyline points="'+pts+'" fill="none" stroke="#8bc8ea" stroke-width="2.2" stroke-linecap="round"/>';
+ for(var i=0;i<vals.length;i+=6){
+  s+='<text x="'+(pad+i*step)+'" y="140" font-size="8.5" fill="#8fa3c0" text-anchor="middle">'+i+':00</text>';
+ }
+ s+='<text x="'+(pad+2)+'" y="'+(yy(max)-5)+'" font-size="9" fill="#8bc8ea">▲ '+Math.round(max)+'</text>';
+ s+='<text x="'+(pad+2)+'" y="'+(yy(min)+12)+'" font-size="9" fill="#e06666">▼ '+Math.round(min)+'</text>';
+ s+='</svg>';
+ box.innerHTML=s;
+ var cur=vals[vals.length-1],mid=vals[Math.min(11,vals.length-1)];
+ var trend=cur>mid+1?"上升":cur<mid-1?"下降":"平稳";
+ var verdict=document.getElementById("pressure_verdict");
+ var parts=[];
+ if(cur<1000)parts.push("当前 <b style='color:#e06666'>"+Math.round(cur)+"hPa</b>：低压缺氧，鱼易离底上浮、口差，慎钓或钓离底/半水");
+ else if(cur<1005)parts.push("当前 <b style='color:#f59e0b'>"+Math.round(cur)+"hPa</b>：气压偏低，鱼活性一般，钓底为主可钓离底");
+ else parts.push("当前 <b style='color:#52c41a'>"+Math.round(cur)+"hPa</b>：气压正常/偏高，鱼贴底活性好");
+ parts.push("24h走势：<b>"+trend+"</b>"+(trend==="下降"?"（气压走低，鱼口趋差，宜早不宜晚）":trend==="上升"?"（气压回升，鱼口趋好）":""));
+ if(verdict)verdict.innerHTML="<span style='font-size:12px'>"+parts.join("；")+"</span>";
+ return cur;
+}
+var LOW_ALERT_SHOWN=false;
+function lowPressAlert(cur){
+ if(cur==null||cur>=1000||LOW_ALERT_SHOWN)return;
+ LOW_ALERT_SHOWN=true;
+ var a=document.getElementById("walarm");
+ if(a){a.style.display="block";a.innerHTML="⚠️ <b>低压预警</b>：当前气压 "+Math.round(cur)+" hPa（<1000）。缺氧闷热，鲤鲫离底上浮、鱼口差——建议改钓进水口/活水/离底30-50cm，或等气压回升。<span style='float:right;cursor:pointer;color:#ffd591' onclick='this.parentNode.style.display=\"none\"'>✕</span>";}
+}
+
 function renderJieqi(d){
  var j=d.jieqi||{},name=j.name||"白露",info=JIEQI[name]||["--","--","--","--","--"];
  document.getElementById("jqpill").textContent=name;
@@ -740,6 +840,7 @@ function loadWeather(city){
   if(!c){document.getElementById("cP").textContent="未找到该城市";return}
   var u="https://api.open-meteo.com/v1/forecast?latitude="+c.lat+"&longitude="+c.lon+
     "&current=temperature_2m,relative_humidity_2m,apparent_temperature,pressure_msl,wind_speed_10m,wind_direction_10m,weather_code,precipitation"+
+    "&hourly=temperature_2m,relative_humidity_2m,pressure_msl,wind_speed_10m,precipitation,weather_code"+
     "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,sunrise,sunset"+
     "&timezone=auto&forecast_days=7";
   fetch(u,{cache:"no-store"}).then(function(r){return r.json()}).then(function(x){renderWeather(x,city)})
@@ -771,6 +872,8 @@ function renderWeather(x,city){
   mm.push("降雨 <b>"+(l.rain&&l.rain>0?l.rain+"mm":"无")+"</b>");
   mm.push("温差 <b>"+(d.today?((parseFloat(d.today.high)-parseFloat(d.today.low)).toFixed(0))+"℃":"--")+"</b>");
   document.getElementById("wmeta").innerHTML=mm.join(" · ");
+  try{renderHourlyScore(x,d.today)}catch(e){}
+  try{var _pc=renderPressureTrend(x);lowPressAlert(_pc)}catch(e){}
   try{renderFish(d)}catch(e){}try{renderJieqi(d)}catch(e){}
   document.getElementById("netbar").textContent="数据在线";
   var _t=new Date(),_ts=("0"+_t.getHours()).slice(-2)+":"+("0"+_t.getMinutes()).slice(-2);
