@@ -779,11 +779,11 @@ document.getElementById("steps_vm").innerHTML=st.vm.map(function(s){return "<li>
 }
 function renderDraw(){
  var m=METHODS[selM],e=m.e,s=m.s;
- var W=320,H=440,x=160,wy=80,by=394,gr=8,tl=56;  // 软尾：目大格粗、尾短
+ var W=320,H=440,x=160,wy=80,by=394,gr=6,tl=78;  // 细长尾：目格细密（红黄黑三色）、尾长约占全长45%
  var t0=wy-e*gr;        // 漂尾顶端（露出 e 目）
  var t1=t0+tl;          // 漂身顶
  var t2=t1+46;          // 漂身底
- var t3=t2+42;          // 漂脚底（长脚，约等于漂身高度）
+ var t3=t2+46;          // 漂脚底（细长脚，略长于漂身）
  var zb=288,bh=322;     // 铅皮座、八字环
  var A='<svg viewBox="0 0 '+W+' '+H+'" style="max-width:252px;margin:0 auto;display:block;border-radius:16px">';
  A+='<defs>'
@@ -809,18 +809,18 @@ function renderDraw(){
    var y0=t0+i*gr,y1=Math.min(t0+tl,y0+gr);
    if(y0>=t0+tl)break;
    var up=y0<wy;
-   var col=up?(i%2?"#e8b23a":"#e04444"):(i%2?"#46546c":"#3a475c");
-   var w2=2.8+(i/(tl/gr))*1.8;
+   var col=up?(i%3==1?"#e8b23a":(i%3==2?"#222a36":"#e04444")):(i%3==1?"#46546c":(i%3==2?"#1b212c":"#3a475c"));
+   var w2=1.8+(i/(tl/gr))*0.9;
    A+='<rect x="'+(x-w2/2)+'" y="'+y0+'" width="'+w2+'" height="'+(y1-y0-1)+'" fill="'+col+'"/>';
  }
- A+='<circle cx="'+x+'" cy="'+(t0+2)+'" r="2" fill="#e04444"/>';
- A+='<line x1="'+(x+1)+'" y1="'+t0+'" x2="'+(x+1.2)+'" y2="'+(t0+tl)+'" stroke="rgba(255,255,255,0.35)" stroke-width="0.7"/>';
+ A+='<circle cx="'+x+'" cy="'+(t0+3)+'" r="2.4" fill="#ff5a4a" stroke="#fff2e0" stroke-width="0.5" opacity="0.95"/>';
+ A+='<line x1="'+(x+0.8)+'" y1="'+t0+'" x2="'+(x+1)+'" y2="'+(t0+tl)+'" stroke="rgba(255,255,255,0.3)" stroke-width="0.5"/>';
  // 漂身（水滴形·上宽下尖 + 高光 + 金色分界环）
  A+='<path d="M'+(x-15)+' '+(t1+2)+' Q'+(x-13)+' '+(t1+13)+' '+(x-9)+' '+(t1+21)+' Q'+(x-5.5)+' '+(t2-9)+' '+(x-2)+' '+t2+' L'+(x+2)+' '+t2+' Q'+(x+5.5)+' '+(t2-9)+' '+(x+9)+' '+(t1+21)+' Q'+(x+13)+' '+(t1+13)+' '+(x+15)+' '+(t1+2)+' Z" fill="url(#dgBody)" stroke="#5e1a14" stroke-width="0.8"/>';
  A+='<path d="M'+(x-6.5)+' '+(t1+6)+' Q'+(x-5)+' '+(t1+17)+' '+(x-2.5)+' '+(t2-8)+'" stroke="rgba(255,190,170,0.55)" fill="none" stroke-width="1.6" stroke-linecap="round"/>';
  A+='<ellipse cx="'+x+'" cy="'+(t1+13)+'" rx="12.5" ry="2.2" fill="none" stroke="#e8c766" stroke-width="1" opacity="0.85"/>';
  // 漂脚（长脚）
- A+='<rect x="'+(x-2)+'" y="'+t2+'" width="4" height="'+(t3-t2)+'" fill="url(#dgFoot)"/>';
+ A+='<rect x="'+(x-1.7)+'" y="'+t2+'" width="3.4" height="'+(t3-t2)+'" fill="url(#dgFoot)"/>';
  A+='<circle cx="'+x+'" cy="'+(t3+2)+'" r="2" fill="#9db0c6"/>';
  // 主线（带高光）
  A+='<line x1="'+x+'" y1="'+(t3+3)+'" x2="'+x+'" y2="'+(zb-8)+'" stroke="#7f92ad" stroke-width="1.1"/>';
@@ -878,7 +878,7 @@ function renderDraw(){
  A+='<circle cx="206" cy="'+(by-46)+'" r="1.6" fill="url(#dgBub)"><animate attributeName="cy" values="'+(by-46)+';'+(wy+20)+'" dur="4.6s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.8;0.1" dur="4.6s" repeatCount="indefinite"/></circle>';
  // 标注
  A+='<text x="'+(x+16)+'" y="'+(t0+9)+'" font-size="9" fill="#d6deeb">露出 '+e+' 目</text>';
- A+='<text x="'+(x-64)+'" y="'+(t0+22)+'" font-size="8" fill="#9fb4c8">软尾</text>';
+ A+='<text x="'+(x-64)+'" y="'+(t0+24)+'" font-size="8" fill="#9fb4c8">细长尾</text>';
  A+='<text x="'+(x+16)+'" y="'+(t1+22)+'" font-size="8" fill="#8fa3c0">漂身</text>';
  A+='<text x="'+(x+16)+'" y="'+(t1+42)+'" font-size="8" fill="#c8b26a">3g 吃铅</text>';
  A+='<text x="'+(x+16)+'" y="'+(t2+24)+'" font-size="8" fill="#8fa3c0">漂脚·长</text>';
