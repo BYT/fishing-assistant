@@ -106,6 +106,7 @@ svg{width:100%;height:auto;display:block}
     <div class="note">鱼层位置 = 时段基线 + 气压/湿度/下层溶氧综合修正；图上文字（鲤·X层/鲫·X层）与判定结论同源一致（0=水面，1=水底）· 示意</div>
   </div>
   <div class="card"><h3>⑥ 未来3天鱼情趋势（含出钓评分）</h3><div class="body" id="c3d">--</div></div>
+  <div class="card"><h3>⑦ 月相夜钓参考</h3><div class="body" id="cMoon">--</div></div>
 </div>
 
 
@@ -252,6 +253,41 @@ function ha(h){return h>=95?"极高湿(≥95%)·空气接近饱和，多伴降�
 function wa(lv){return lv<=1?"微风/无风·复氧弱，闷热天鱼易上浮":lv<=3?"2-4级风最佳·天然增氧机，下风口溶氧高，钓下风口":lv<=5?"5级风·鱼退深水，钓背风深水区":"大风·不宜出钓，注意安全"}
 function windNum(s){if(!s)return 0;var m=String(s).match(/([0-9]+)/);return m?parseInt(m[1]):0}
 function dfc(v){if(v==null||isNaN(v))return "暂无温度数据";if(v>=14)return "温差"+v+"℃ 过大（≥14℃）· 昼夜温差大鱼应激明显，主攻早晚近岸浅水，白天午后鱼退深水，建议钓早口+傍晚黄金口，午间守深水，晴夜温差大夜口一般";if(v>=10)return "温差"+v+"℃ 偏大（10-14℃）· 早晚口好午后口稀，钓早口6-10点+晚口16-19点，午后守深水贴底，饵用腥香压底";if(v>=6)return "温差"+v+"℃ 适中（6-10℃）· 水温稳定鱼应激小，全天可钓贴底为主，昼夜活性均衡";return "温差"+v+"℃ 偏小（<6℃）· 水温平稳鱼贴底溶氧稳定，钓早晚或夜钓，底钓为主，饵可稍腥"}
+var LUNAR_INFO=[0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x055c0,0x0ab60,0x096d5,0x092e0,0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,0x05aa0,0x076a3,0x096d0,0x04bd7,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0];
+function lYearDays(y){var s=0;for(var i=0x8000;i>0x8;i>>=1){if(LUNAR_INFO[y-1900]&i)s+=1}return s+29*12+lLeapDays(y);}
+function lLeapMonth(y){return LUNAR_INFO[y-1900]&0xf;}
+function lLeapDays(y){if(lLeapMonth(y))return (LUNAR_INFO[y-1900]&0x10000)?30:29;return 0;}
+function lMonthDays(y,m){return (LUNAR_INFO[y-1900]&(0x10000>>m))?30:29;}
+function getLunar(y,m,d){
+ var off=(Date.UTC(y,m-1,d)-Date.UTC(1900,0,31))/86400000;
+ var i,temp;
+ for(i=1900;i<2050&&off>0;i++){temp=lYearDays(i);off-=temp;}
+ if(off<0){off+=temp;i--;}
+ var ly=i,lm=0,isLeap=false,lp=lLeapMonth(ly);
+ for(lm=1;lm<=12&&off>0;lm++){
+  if(lp>0&&lm===lp+1&&!isLeap){lm--;isLeap=true;temp=lLeapDays(ly);}
+  else{temp=lMonthDays(ly,lm);}
+  if(isLeap&&lm===lp+1)isLeap=false;
+  off-=temp;
+ }
+ if(off===0&&lp>0&&lm===lp+1){if(isLeap){isLeap=false;}else{isLeap=true;lm--;}}
+ if(off<0){off+=temp;lm--;}
+ return {year:ly,month:lm,day:off+1,isLeap:isLeap};
+}
+var MONTH_CN=["正月","二月","三月","四月","五月","六月","七月","八月","九月","十月","冬月","腊月"];
+var DAY_CN=["初一","初二","初三","初四","初五","初六","初七","初八","初九","初十","十一","十二","十三","十四","十五","十六","十七","十八","十九","二十","廿一","廿二","廿三","廿四","廿五","廿六","廿七","廿八","廿九","三十"];
+function moonPhaseNow(){
+ var n=new Date(),L=getLunar(n.getFullYear(),n.getMonth()+1,n.getDate()),d=L.day,ph="",tip="";
+ if(d===1){ph="新月";tip="夜空全黑无月光，鱼靠岸大胆觅食夜口好：钓近岸浅水，可用灯光聚鱼";}
+ else if(d<=6){ph="娥眉月";tip="前半夜微光、后半夜全黑：前半夜口一般，后半夜（月落后）转好";}
+ else if(d<=9){ph="上弦月";tip="上半夜有月光、下半夜转黑：后半夜口好，月光下钓深一些";}
+ else if(d<=13){ph="盈凸月";tip="月光渐强鱼警惕上升：夜口一般，宜钓深水或草边暗处";}
+ else if(d<=16){ph="满月";tip="整夜明亮鱼靠岸谨慎，口偏慢偏轻：钓深水远离强光，细线小钩浓腥压底";}
+ else if(d<=20){ph="亏凸月";tip="月落后转黑：前半夜口一般，后半夜（月落）口转好";}
+ else if(d<=23){ph="下弦月";tip="下半夜才有月光：前半夜全黑口好，月光上来后钓深";}
+ else {ph="残月";tip="夜黑无月光同新月：夜口活跃，钓近岸浅水";}
+ return {m:(L.isLeap?"闰":"")+MONTH_CN[L.month-1],d:DAY_CN[d-1],n:ph,t:tip};
+}
 function doEst(t){var sat=14.652-0.41022*t+0.007991*t*t-0.000077774*t*t*t;if(sat<0)sat=0;var c=t<28;return {up:(sat*(c?0.95:0.92)).toFixed(1),mid:(sat*(c?0.82:0.78)).toFixed(1),low:(sat*(c?0.70:0.64)).toFixed(1)}}
 function layerAdjust(li,ji,p,h,dol){var s=0;if(p<1000)s-=0.22;else if(p<1005)s-=0.10;else if(p>=1025)s+=0.14;else s+=0.08;if(h>=90)s-=0.12;else if(h>=85)s-=0.06;else if(h<55)s+=0.06;if(dol!=null){if(dol<5)s-=0.14;else if(dol<6)s-=0.07}li=Math.max(.08,Math.min(.95,li+s*1.2));ji=Math.max(.08,Math.min(.95,ji+s*0.8));return [li,ji]}
 function slotAt(h){return SLOTS[Math.floor(h/3)%8]}
@@ -381,6 +417,8 @@ function renderCalc(){
   (tip?"<div class='note'>⚠️ "+tip+"</div>":"");
 }
 function renderFish(d){
+ var mp=moonPhaseNow(),cm=document.getElementById("cMoon");
+ if(cm)cm.innerHTML="🌙 农历"+mp.m+" · <b>"+mp.n+"</b>："+mp.t;
  var p=parseFloat(d.live&&d.live.pressure), h=parseInt(d.live&&d.live.humidity);
  var ws=d.live&&d.live.wind_level||"0级", wv=windNum(ws);
  document.getElementById("fP").textContent=p?Math.round(p):"--";
