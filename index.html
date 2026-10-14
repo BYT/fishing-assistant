@@ -99,17 +99,12 @@ svg{width:100%;height:auto;display:block}
   <div class="card"><h3>① 气压判断</h3><div class="body" id="cP">加载中…</div></div>
   <div class="card"><h3>② 湿度判断</h3><div class="body" id="cH">加载中…</div></div>
   <div class="card"><h3>③ 风力判断</h3><div class="body" id="cW">加载中…</div></div>
-  <div class="card"><h3>④ <span id="cDO_river">贾鲁河</span>三层溶解氧（模型估算，非实测）</h3>
-    <div class="body" id="cDO">--</div>
-    <div class="note">估算依据：水温↔饱和溶解氧物理关系；上层=饱和值92-97%，中层=78-85%，下层=64-74%。凌晨3-4点接近全天最低，下层可能跌破地表水Ⅲ类下限5mg/L。⚠️ 本页按所选城市水温做通用模型估算，非特定河流实测数据，切换城市后自动更新。</div>
-  </div>
-  <div class="card"><h3>⑤ 鲤鲫水层（当前 + 提前2小时预测）</h3>
+  <div class="card"><h3>④ 鲤鲫水层（当前 + 提前2小时预测）</h3>
     <div id="layer_svg"></div>
     <div class="legend"><span><span class="dot" style="background:#f59e0b"></span>鲤鱼（对缺氧更敏感，先上浮）</span><span><span class="dot" style="background:#9aa5b5"></span>鲫鱼（耐低氧更强，上浮更晚）</span></div>
     <div class="note">鱼层位置 = 时段基线 + 气压/湿度/下层溶氧综合修正；图上文字（鲤·X层/鲫·X层）与判定结论同源一致（0=水面，1=水底）· 示意</div>
   </div>
-  <div class="card"><h3>📽️ 鱼情水层全天变化（动图）</h3><img src="fish-anim.gif" alt="鱼情水层动图" style="width:100%;border-radius:12px;display:block"></div>
-  <div class="card"><h3>⑥ 未来3天鱼情趋势（含出钓评分）</h3><div class="body" id="c3d">--</div></div>
+  <div class="card"><h3>⑤ 未来3天鱼情趋势（含出钓评分）</h3><div class="body" id="c3d">--</div></div>
 </div>
 
 
@@ -449,7 +444,6 @@ function renderCalc(){
   (tip?"<div class='note'>⚠️ "+tip+"</div>":"");
 }
 function renderFish(d){
- var rn=riverName(d.city||CITY);var rt=document.getElementById("cDO_river");if(rt)rt.textContent=rn;
  var p=parseFloat(d.live&&d.live.pressure), h=parseInt(d.live&&d.live.humidity);
  var ws=d.live&&d.live.wind_level||"0级", wv=windNum(ws);
  document.getElementById("fP").textContent=p?Math.round(p):"--";
@@ -459,7 +453,6 @@ function renderFish(d){
  document.getElementById("cH").textContent=h!=null&&!isNaN(h)?ha(h):"暂无湿度数据";
  document.getElementById("cW").textContent=wa(wv);
  var t=parseFloat(d.live&&d.live.temp);var dox=t?doEst(t):null;
- document.getElementById("cDO").textContent=dox?("水温约"+Math.round(t)+"℃ → 上层DO≈"+dox.up+"mg/L · 中层≈"+dox.mid+"mg/L · 下层≈"+dox.low+"mg/L（"+rn+"水温≈气温，通用模型估算，非实测）"):"无温度数据，无法估算";
  renderScore(d);
  var now=new Date(), cur=slotAt(now.getHours()), fut=slotAt((now.getHours()+2)%24);
  var dol=dox?parseFloat(dox.low):null;
