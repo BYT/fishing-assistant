@@ -279,6 +279,35 @@ function windDirLine(s){
  else tip="西风多变：口常一般，钓深水贴底求稳";
  return '<div style="font-size:12px;color:#d6deeb;margin-top:6px">🧭 '+dir+'：'+tip+' · 下风口溶氧高优先</div>';
 }
+function windPeriod(hd){
+ if(!hd||!hd.time||!hd.wind_speed_10m)return "";
+ var ts=hd.time,ws=hd.wind_speed_10m;
+ var now=new Date(),ymd=now.getFullYear()+"-"+("0"+(now.getMonth()+1)).slice(-2)+"-"+("0"+now.getDate()).slice(-2);
+ var s0=-1;for(var i=0;i<ts.length;i++){if(ts[i].indexOf(ymd)===0){s0=i;break}}
+ if(s0<0)return "";
+ var segs=[[0,6,"深夜"],[6,9,"早"],[9,12,"上午"],[12,15,"午后"],[15,18,"傍晚"],[18,21,"夜"],[21,24,"晚"]];
+ var curH=now.getHours(),cells=[],any=false;
+ var cols=["#8fa3c0","#52c41a","#52c41a","#52c41a","#f5a623","#f57c00","#ea6668","#ea6668","#ea6668","#c0392b","#c0392b","#c0392b"];
+ for(var s=0;s<segs.length;s++){
+  var h0=segs[s][0],h1=segs[s][1],nm=segs[s][2],sum=0,cnt=0;
+  for(var i=s0;i<ts.length;i++){
+   var hr=parseInt(ts[i].slice(11,13),10);
+   if(hr<h0||hr>=h1)continue;
+   sum+=ws[i];cnt++;
+  }
+  if(!cnt)continue;
+  any=true;
+  var lv=windLevel(sum/cnt);lv=Math.min(Math.max(lv,0),11);
+  var nowSeg=curH>=h0&&curH<h1;
+  cells.push('<div style="flex:1 1 46px;min-width:0;text-align:center;padding:6px 2px;border-radius:8px;background:'+cols[lv]+';opacity:'+(nowSeg?1:.55)+';border:'+(nowSeg?'2px solid #e8ecf4':'1px solid rgba(255,255,255,.08)')+';box-sizing:border-box">'
+   +'<div style="font-size:10px;color:#0f1420;font-weight:600">'+nm+'</div>'
+   +'<div style="font-size:13px;font-weight:700;color:#0f1420">'+lv+'级</div></div>');
+ }
+ if(!any)return "";
+ return '<div style="margin-top:10px;border-top:1px solid rgba(255,255,255,.08);padding-top:8px">'
+  +'<div style="font-size:11px;color:#8fa3c0;margin-bottom:6px">分时段风力 · 今天逐小时预报（色=风级：绿1-3 / 黄4 / 橙5 / 红6+，白框=当前时段）</div>'
+  +'<div style="display:flex;gap:4px;flex-wrap:wrap">'+cells.join("")+'</div></div>';
+}
 function dfc(v){if(v==null||isNaN(v))return "暂无温度数据";if(v>=14)return "温差"+v+"℃ 过大（≥14℃）· 昼夜温差大鱼应激明显，主攻早晚近岸浅水，白天午后鱼退深水，建议钓早口+傍晚黄金口，午间守深水，晴夜温差大夜口一般";if(v>=10)return "温差"+v+"℃ 偏大（10-14℃）· 早晚口好午后口稀，钓早口6-10点+晚口16-19点，午后守深水贴底，饵用腥香压底";if(v>=6)return "温差"+v+"℃ 适中（6-10℃）· 水温稳定鱼应激小，全天可钓贴底为主，昼夜活性均衡";return "温差"+v+"℃ 偏小（<6℃）· 水温平稳鱼贴底溶氧稳定，钓早晚或夜钓，底钓为主，饵可稍腥"}
 var LUNAR_INFO=[0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x055c0,0x0ab60,0x096d5,0x092e0,0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,0x05aa0,0x076a3,0x096d0,0x04bd7,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0];
 function lYearDays(y){var s=0;for(var i=0x8000;i>0x8;i>>=1){if(LUNAR_INFO[y-1900]&i)s+=1}return s+29*12+lLeapDays(y);}
@@ -453,7 +482,7 @@ function renderFish(d){
  document.getElementById("fW").textContent=ws;
  document.getElementById("cP").textContent=p?pa(p):"暂无气压数据";
  document.getElementById("cH").textContent=h!=null&&!isNaN(h)?ha(h):"暂无湿度数据";
- document.getElementById("cW").innerHTML=windBar(wv)+windDirLine(ws);
+ document.getElementById("cW").innerHTML=windBar(wv)+windDirLine(ws)+windPeriod(d.hourly);
  var hiT=parseFloat(d.today&&d.today.high),loT=parseFloat(d.today&&d.today.low),dfv=hiT-loT;
  document.getElementById("cD").textContent=dfc(dfv);
  var t=parseFloat(d.live&&d.live.temp);var dox=t?doEst(t):null;
@@ -739,7 +768,7 @@ function loadWeather(city){
     "&current=temperature_2m,relative_humidity_2m,apparent_temperature,pressure_msl,wind_speed_10m,wind_direction_10m,weather_code,precipitation"+
     "&hourly=temperature_2m,relative_humidity_2m,pressure_msl,wind_speed_10m,precipitation,weather_code"+
     "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,sunrise,sunset"+
-    "&timezone=auto&forecast_days=7";
+    "&timezone=auto&wind_speed_unit=ms&forecast_days=7";
   fetch(u,{cache:"no-store"}).then(function(r){return r.json()}).then(function(x){renderWeather(x,city)})
   .catch(function(){document.getElementById("cP").textContent="天气数据获取失败，请检查手机网络"});
 }
@@ -757,7 +786,7 @@ function renderWeather(x,city){
       rain:day.precipitation_sum?day.precipitation_sum[i]:0,wind:""});
   }
   var jq=jsJieqi(new Date());
-  var d={city:city,live:live,today:today,days3:days3,jieqi:jq,alarms:[]};
+  var d={city:city,live:live,today:today,days3:days3,jieqi:jq,alarms:[],hourly:x.hourly||null};
   document.getElementById("citybar").textContent=d.city+" · "+jq.name;
   var l=d.live;
   document.getElementById("wtemp").innerHTML=(l.temp!=null?Math.round(l.temp):"--")+"<small>℃</small>";
