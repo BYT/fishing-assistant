@@ -252,6 +252,22 @@ function pa(p){return p>=1025?"高压（≥1025hPa）·鱼口活跃，贴底觅�
 function ha(h){return h>=95?"极高湿(≥95%)·空气接近饱和，多伴降雨/浓雾，气压低闷缺氧，鲤鲫易离底上浮、口弱，建议钓离底或浅边活水增氧区":h>=85?"高湿(85-95%)·多为雨前/雨后，闷热溶氧偏低，鱼易上浮，钓浅边/活水口，饵用清淡果酸甜":h>=70?"湿度适中偏湿(70-85%)·空气湿润、气压平稳，鱼活性正常，全天可钓，优先下风口，饵用腥香":h>=50?"湿度适中(50-70%)·干湿平衡、气压稳定，鲤鲫贴底活性好，正常钓底":h>=30?"低湿(30-50%)·空气干燥，多北风晴冷天，表层水温波动大，鱼口偏慢，宜钓深水贴底":"极干燥(<30%)·多连晴大风，建议钓深水/活水，饵用香腥加重"}
 function wa(lv){return lv<=1?"微风/无风·复氧弱，闷热天鱼易上浮":lv<=3?"2-4级风最佳·天然增氧机，下风口溶氧高，钓下风口":lv<=5?"5级风·鱼退深水，钓背风深水区":"大风·不宜出钓，注意安全"}
 function windNum(s){if(!s)return 0;var m=String(s).match(/([0-9]+)/);return m?parseInt(m[1]):0}
+function windBar(w){
+ w=parseFloat(w)||0;var seg,adv;
+ if(w<=1){seg="微风/无风";adv="复氧弱，闷热天鱼易上浮：钓早晚或活水口，饵可稍清淡";}
+ else if(w<=3){seg="轻风~微风";adv="天然增氧机：下风口溶氧高、鱼聚，优先钓下风口，全天口好";}
+ else if(w<=5){seg="和风~清风";adv="浪大抛竿难：鱼退深水或靠岸湾，钓背风深水区/回水湾";}
+ else{seg="强风及以上";adv="风浪大不宜出钓，安全第一，等风小再战";}
+ var cols=["#8fa3c0","#52c41a","#52c41a","#52c41a","#f5a623","#f57c00","#ea6668","#ea6668","#ea6668","#c0392b","#c0392b","#c0392b"];
+ var ci=Math.min(Math.max(Math.round(w),0),11),cells="";
+ for(var i=0;i<12;i++){var act=i===ci;
+  cells+='<div style="flex:1;height:12px;background:'+cols[i]+';opacity:'+(act?1:.35)+';border:'+(act?'2px solid #e8ecf4':'0')+';border-radius:'+(i===0?'4px 0 0 4px':i===11?'0 4px 4px 0':'0')+';box-sizing:border-box"></div>';}
+ var lv=["0无风","1软风","2轻风","3微风","4和风","5清风","6强风","7疾风","8大风","9烈风","10狂风","11暴风"][ci];
+ return '<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap"><b style="font-size:22px;color:#6fd6e0">'+w+'级</b><span style="font-size:12px;color:#8fa3c0">'+lv+' · '+seg+'</span></div>'
+  +'<div style="display:flex;margin:8px 0 4px">'+cells+'</div>'
+  +'<div style="font-size:12px;color:#d6deeb">'+adv+'</div>'
+  +'<div style="font-size:10px;color:#6b7d99;margin-top:5px">风级条：绿=黄金风1-3级 · 黄4级 · 橙5级 · 红6级以上</div>';
+}
 function dfc(v){if(v==null||isNaN(v))return "暂无温度数据";if(v>=14)return "温差"+v+"℃ 过大（≥14℃）· 昼夜温差大鱼应激明显，主攻早晚近岸浅水，白天午后鱼退深水，建议钓早口+傍晚黄金口，午间守深水，晴夜温差大夜口一般";if(v>=10)return "温差"+v+"℃ 偏大（10-14℃）· 早晚口好午后口稀，钓早口6-10点+晚口16-19点，午后守深水贴底，饵用腥香压底";if(v>=6)return "温差"+v+"℃ 适中（6-10℃）· 水温稳定鱼应激小，全天可钓贴底为主，昼夜活性均衡";return "温差"+v+"℃ 偏小（<6℃）· 水温平稳鱼贴底溶氧稳定，钓早晚或夜钓，底钓为主，饵可稍腥"}
 var LUNAR_INFO=[0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x055c0,0x0ab60,0x096d5,0x092e0,0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,0x05aa0,0x076a3,0x096d0,0x04bd7,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0];
 function lYearDays(y){var s=0;for(var i=0x8000;i>0x8;i>>=1){if(LUNAR_INFO[y-1900]&i)s+=1}return s+29*12+lLeapDays(y);}
@@ -426,7 +442,7 @@ function renderFish(d){
  document.getElementById("fW").textContent=ws;
  document.getElementById("cP").textContent=p?pa(p):"暂无气压数据";
  document.getElementById("cH").textContent=h!=null&&!isNaN(h)?ha(h):"暂无湿度数据";
- document.getElementById("cW").textContent=wa(wv);
+ document.getElementById("cW").innerHTML=windBar(wv);
  var hiT=parseFloat(d.today&&d.today.high),loT=parseFloat(d.today&&d.today.low),dfv=hiT-loT;
  document.getElementById("cD").textContent=dfc(dfv);
  var t=parseFloat(d.live&&d.live.temp);var dox=t?doEst(t):null;
