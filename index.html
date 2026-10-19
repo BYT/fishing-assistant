@@ -145,10 +145,13 @@ svg{width:100%;height:auto;display:block}
 
 </div>
 <div class="page" id="p-cmd">
-  <div class="card"><h3>🤖 交互指令（复制后发给 AI 执行）</h3>
-    <div class="body" style="font-size:12px;color:#8fa3c0;margin-bottom:8px;line-height:1.6">点指令 → 自动复制文本 → 粘贴发给豆包 AI → AI 收到后立即执行对应操作（更新软件 / 出报告）</div>
+  <div class="card"><h3>🤖 指令直发（一键发送到豆包）</h3>
+    <div class="body" style="font-size:12px;color:#8fa3c0;line-height:1.6">① 点下方指令 或 直接输入 → ② 点「发送到豆包」→ ③ 自动复制并跳转豆包，回车确认即送达 AI 执行</div>
     <div id="cmd_list"></div>
-    <div class="note">指令内容是给 AI 的口令：复制到豆包对话里发送即可，无需手动打字。</div>
+    <input id="cmd_input" type="text" placeholder="输入指令，如：帮我更新软件 / 生成今日鱼情报告 / 今晚夜钓方案" style="width:100%;margin-top:10px;padding:10px;border-radius:8px;border:1px solid rgba(111,214,224,.3);background:#0f1420;color:#e8ecf4;font-size:13px;box-sizing:border-box">
+    <button class="btn" onclick="cmdSend()" style="margin-top:8px">📤 发送到豆包（自动复制并跳转）</button>
+    <div class="note" id="cmd_fb" style="color:#6fd6e0"></div>
+    <div class="note" id="cmd_hist"></div>
   </div>
   <div class="card"><h3>🔄 检查更新</h3>
     <div class="body" id="ver_box">检测中…</div>
@@ -388,16 +391,37 @@ var CMDS=[
 function renderCmds(){
  var el=document.getElementById("cmd_list");if(!el)return;
  el.innerHTML=CMDS.map(function(c,i){
-  return '<div class="method" onclick="cmdCopy('+i+')"><div class="n">'+c.n+'<span style="font-size:11px;color:#8fa3c0">复制 → 发 AI</span></div><div class="d">'+c.t+'</div></div>';
+  return '<div class="method" onclick="cmdPick('+i+')"><div class="n">'+c.n+'<span style="font-size:11px;color:#8fa3c0">点此填入 ↓</span></div><div class="d">'+c.t+'</div></div>';
  }).join("");
 }
-function cmdCopy(i){
- var t=CMDS[i]?CMDS[i].t:"";if(!t)return;
- var done=function(){var b=document.querySelectorAll("#cmd_list .method")[i];if(b){var s=b.querySelector(".n span");if(s){s.textContent="已复制 ✓";setTimeout(function(){s.textContent="复制 → 发 AI";},2000);}}};
+function cmdPick(i){
+ var inp=document.getElementById("cmd_input");var fb=document.getElementById("cmd_fb");
+ if(!inp)return;
+ var t=CMDS[i]?CMDS[i].t:"";
+ if(t){inp.value=t;if(fb)fb.innerHTML="已填入输入框，点下方「发送到豆包」即可";}
+}
+function cmdSend(){
+ var inp=document.getElementById("cmd_input");var fb=document.getElementById("cmd_fb");
+ if(!inp)return;
+ var t=inp.value.trim();
+ if(!t){if(fb)fb.innerHTML="请先输入或点选一条指令";return;}
+ try{var h=JSON.parse(localStorage.getItem("fa_cmd_hist")||"[]");h.unshift(t);if(h.length>20)h=h.slice(0,20);localStorage.setItem("fa_cmd_hist",JSON.stringify(h));}catch(e){}
+ renderCmdHist();
+ var done=function(){if(fb)fb.innerHTML="已复制 ✓ 正在跳转豆包…到豆包后直接回车发送，AI 收到立即执行：<b style=\"color:#6fd6e0\">"+t+"</b>";setTimeout(function(){try{location.href="https://www.doubao.com/chat/";}catch(e){}},350);};
  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,function(){cmdCopyLegacy(t);done();});}
  else{cmdCopyLegacy(t);done();}
 }
 function cmdCopyLegacy(t){var ta=document.createElement("textarea");ta.value=t;ta.style.cssText="position:fixed;opacity:0";document.body.appendChild(ta);ta.select();try{document.execCommand("copy");}catch(e){}document.body.removeChild(ta);}
+function renderCmdHist(){
+ var el=document.getElementById("cmd_hist");if(!el)return;
+ var h=[];try{h=JSON.parse(localStorage.getItem("fa_cmd_hist")||"[]");}catch(e){}
+ if(!h.length){el.innerHTML="";return;}
+ el.innerHTML="最近指令：<br>"+h.slice(0,5).map(function(t,i){return '<span onclick="cmdFill('+i+')" style="display:inline-block;background:rgba(111,214,224,.12);color:#6fd6e0;border-radius:6px;padding:2px 8px;margin:3px 4px 0 0;font-size:11px;cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:top">'+t+'</span>';}).join("");
+}
+function cmdFill(i){
+ var h=[];try{h=JSON.parse(localStorage.getItem("fa_cmd_hist")||"[]");}catch(e){}
+ if(h[i]&&document.getElementById("cmd_input")){document.getElementById("cmd_input").value=h[i];}
+}
 function cmdCheck(){
  var box=document.getElementById("ver_box");if(!box)return;
  box.innerHTML="检测中…";
@@ -424,6 +448,8 @@ function cmdReset(){
  }
 }
 renderCmds();
+renderCmdHist();
+cmdCheck();
 cmdCheck();
 
 
