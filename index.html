@@ -144,11 +144,25 @@ svg{width:100%;height:auto;display:block}
 
 
 </div>
+<div class="page" id="p-cmd">
+  <div class="card"><h3>🤖 交互指令（复制后发给 AI 执行）</h3>
+    <div class="body" style="font-size:12px;color:#8fa3c0;margin-bottom:8px;line-height:1.6">点指令 → 自动复制文本 → 粘贴发给豆包 AI → AI 收到后立即执行对应操作（更新软件 / 出报告）</div>
+    <div id="cmd_list"></div>
+    <div class="note">指令内容是给 AI 的口令：复制到豆包对话里发送即可，无需手动打字。</div>
+  </div>
+  <div class="card"><h3>🔄 检查更新</h3>
+    <div class="body" id="ver_box">检测中…</div>
+    <button class="btn" onclick="cmdReset()" style="margin-top:10px">🧹 一键清理缓存并刷新</button>
+    <div class="note">看到旧版本 / 页面不更新时使用：清掉 Service Worker 缓存后强制刷新，立即加载最新版。</div>
+  </div>
+</div>
+
 <div class="foot">
   <span data-p="fish" class="on">🐟 鱼情</span>
   <span data-p="tiao">🎛️ 调漂</span>
   <span data-p="bait">🧾 开饵</span>
   <span data-p="jieqi">🍂 节气</span>
+  <span data-p="cmd">⚙️ 指令</span>
 </div>
 
 <script>
@@ -366,6 +380,52 @@ function jsJieqi(now){
 
 document.querySelectorAll(".foot span").forEach(function(s){s.addEventListener("click",function(){go(s.dataset.p)})});
 function go(p){TAB=p;document.querySelectorAll(".page").forEach(function(x){x.classList.toggle("on",x.id==="p-"+p)});document.querySelectorAll(".foot span").forEach(function(x){x.classList.toggle("on",x.dataset.p===p)});}
+var CMDS=[
+ {n:"🔄 帮我更新软件",t:"帮我更新钓鱼助手软件到最新版（部署线上并提交）"},
+ {n:"📊 生成今日鱼情报告",t:"生成今日鱼情报告（天气+溶氧+节气鱼情+饵料推荐）"},
+ {n:"🌙 今晚夜钓方案",t:"今晚夜钓方案：分时段鱼情预测+钓位水层+饵料搭配"}
+];
+function renderCmds(){
+ var el=document.getElementById("cmd_list");if(!el)return;
+ el.innerHTML=CMDS.map(function(c,i){
+  return '<div class="method" onclick="cmdCopy('+i+')"><div class="n">'+c.n+'<span style="font-size:11px;color:#8fa3c0">复制 → 发 AI</span></div><div class="d">'+c.t+'</div></div>';
+ }).join("");
+}
+function cmdCopy(i){
+ var t=CMDS[i]?CMDS[i].t:"";if(!t)return;
+ var done=function(){var b=document.querySelectorAll("#cmd_list .method")[i];if(b){var s=b.querySelector(".n span");if(s){s.textContent="已复制 ✓";setTimeout(function(){s.textContent="复制 → 发 AI";},2000);}}};
+ if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,function(){cmdCopyLegacy(t);done();});}
+ else{cmdCopyLegacy(t);done();}
+}
+function cmdCopyLegacy(t){var ta=document.createElement("textarea");ta.value=t;ta.style.cssText="position:fixed;opacity:0";document.body.appendChild(ta);ta.select();try{document.execCommand("copy");}catch(e){}document.body.removeChild(ta);}
+function cmdCheck(){
+ var box=document.getElementById("ver_box");if(!box)return;
+ box.innerHTML="检测中…";
+ fetch("sw.js",{cache:"no-store"}).then(function(r){return r.text();}).then(function(t){
+  var m=t.match(/fa-v(\d+)/);var cur=m?m[1]:"?";
+  var w=document.getElementById("ver_box");
+  if(w){w.innerHTML="当前版本 <b style=\"color:#6fd6e0\">v"+cur+"</b> · 已是最新 · "+new Date().toLocaleTimeString("zh-CN",{hour:"2-digit",minute:"2-digit"});}
+ }).catch(function(){
+  var w=document.getElementById("ver_box");
+  if(w){w.innerHTML="<span style=\"color:#8fa3c0\">无法在线检测（本地打开受限）· 直接用下方按钮清缓存强刷</span>";}
+ });
+}
+function cmdReset(){
+ var msg=document.getElementById("ver_box");
+ if(msg)msg.innerHTML="正在清理缓存…";
+ if(window.caches&&caches.keys){
+  caches.keys().then(function(ks){return Promise.all(ks.map(function(k){return caches.delete(k);}));}).then(function(){
+   if(msg)msg.innerHTML="缓存已清理 ✓ 正在强制刷新…";
+   setTimeout(function(){location.reload(true);},400);
+  }).catch(function(){if(msg)msg.innerHTML="清理失败，请重试";});
+ }else{
+  if(msg)msg.innerHTML="当前环境不支持缓存清理，直接刷新…";
+  location.reload(true);
+ }
+}
+renderCmds();
+cmdCheck();
+
 
 function layerName(v){return v<0.2?"近水面":v<0.4?"中上层":v<0.6?"中层":v<0.8?"中下层":"贴底"}
 function drawLayer(li,ji,title,note){
