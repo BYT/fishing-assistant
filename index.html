@@ -424,6 +424,37 @@ function drawLayer(li,ji,title,note){
 }
 
 function scoreLevel(s){return s>=85?"极佳":s>=75?"很好":s>=65?"不错":s>=55?"一般":s>=40?"偏差":"很差"}
+function nightIndex(live,today,jq){
+ var s=60,p=parseFloat(live.pressure),h=parseInt(live.humidity);
+ var hi=parseFloat(today.high),lo=parseFloat(today.low),df=hi-lo;
+ var wn=windNum(live.wind_level),t=parseFloat(live.temp),wstr=live.weather||"";
+ var nightT=parseFloat(today.apparent_low);if(isNaN(nightT))nightT=parseFloat(today.low);
+ if(p>=1025)s+=10;else if(p>=1010)s+=6;else if(p>=1000)s+=0;else s-=12;
+ if(h>=50&&h<70)s+=6;else if(h>=70&&h<85)s+=3;else if(h>=85&&h<95)s-=4;else if(h>=95)s-=8;else if(h>=30&&h<50)s+=2;else s-=4;
+ if(!isNaN(df)){if(df<=8)s+=8;else if(df<=10)s+=6;else if(df<=14)s+=2;else s-=5}
+ if(wn>=1&&wn<=3)s+=6;else if(wn===4)s+=2;else if(wn===5)s-=4;else if(wn>5)s-=10;else s-=2;
+ if(wstr.indexOf("雨")>=0)s+=4;else if(wstr.indexOf("雪")>=0)s-=5;
+ if(!isNaN(nightT)){if(nightT>=12&&nightT<=22)s+=8;else if(nightT>=8&&nightT<12)s+=4;else if(nightT>22)s+=2;else if(nightT>=4&&nightT<8)s-=2;else s-=6}
+ var dol=doEst(t).low;if(!isNaN(parseFloat(dol))){if(parseFloat(dol)>=5.5)s+=4;else if(parseFloat(dol)>=5)s+=2;else s-=4}
+ var gold=["惊蛰","春分","清明","谷雨","白露","秋分","寒露"],bad=["小暑","大暑","小寒","大寒","冬至"];
+ if(gold.indexOf(jq.name)>=0)s+=5;else if(bad.indexOf(jq.name)>=0)s-=3;
+ return Math.max(0,Math.min(100,Math.round(s)));
+}
+function nightAdvice(ns,t,df,p,wn){
+ var s="";
+ if(ns>=75)s="夜间鱼情很好，19:00-22:30 夜钓窗口佳，钓底/中下层，饵用 🌙 夜钓饵单";
+ else if(ns>=55)s="夜间可钓，卡 19:00-21:00 入夜补食潮，中下层守，饵用 🌙 夜钓饵单";
+ else if(ns>=40)s="夜间偏差，降温/溶氧限制口稀，钓深水守底，22点前收竿";
+ else s="夜间不适合出钓，等回暖或气压回升再夜钓";
+ var more=[];
+ if(!isNaN(df)&&df>14)more.push("温差"+df+"℃过大，冷停口快");
+ if(!isNaN(df)&&df<=8)more.push("温差"+df+"℃平缓，窗口更持久");
+ if(p>=1010)more.push("气压"+Math.round(p)+"高压稳定");
+ else if(p<1000)more.push("低压闷热，鱼易上浮");
+ if(wn===0)more.push("无风过静，鱼警觉");else if(wn>=1&&wn<=3)more.push("微风"+wn+"级增氧");
+ if(more.length)s+="；"+more.join("，");
+ return s;
+}
 function scoreIndex(live,today,jq){
  var s=60,p=parseFloat(live.pressure),h=parseInt(live.humidity);
  var hi=parseFloat(today.high),lo=parseFloat(today.low),df=hi-lo;
@@ -464,9 +495,15 @@ function renderScore(d){
  var line=up.length?"✅ "+up.join(" · "):"✅ 各项基本均衡";
  if(dn.length)line+="<br>⚠️ "+dn.join(" · ");
  var advice=sc>=75?"今日鱼情不错，优先冲傍晚黄金窗口，饵用🌞白天饵单（守大物可加螺鲤搓大饵）。":sc>=55?"可以出钓，选最佳窗口作钓，气压平稳以钓底为主，饵用🌞白天饵单。":sc>=40?"鱼情偏差，建议改钓深水/活水口，饵用🌞白天饵单（虾粉减半）或🌙夜钓饵单，夜钓优于白天。":"今天不适合出钓，等气压回升、温差收窄再去。";
+ var ns=nightIndex(live,today,jq),nl=scoreLevel(ns),na=nightAdvice(ns,t,df,p,wn);
  box.innerHTML='<div style="display:flex;align-items:baseline;gap:10px"><span style="font-size:34px;font-weight:800;color:'+(sc>=75?"#52c41a":sc>=60?"#6fd6e0":sc>=45?"#f59e0b":"#e06666")+'">'+sc+'</span><span style="font-size:13px;color:#8fa3c0">分 · '+lv+'</span></div>'+
   scoreBar(sc)+
-  '🕐 最佳出钓：<b style="color:#6fd6e0">'+bestWindow(t)+'</b><br><span style="font-size:11px;color:#8fa3c0">'+line+'</span><br><br>💡 '+advice;
+  '🕐 最佳出钓：<b style="color:#6fd6e0">'+bestWindow(t)+'</b><br><span style="font-size:11px;color:#8fa3c0">'+line+'</span><br><br>💡 '+advice+
+  '<div style="margin-top:10px;padding:8px 10px;border-radius:10px;background:rgba(125,150,190,.10);border:1px solid rgba(125,150,190,.28)">'+
+   '<div style="font-size:12px;font-weight:600;color:#6fd6e0">🌙 夜间出钓判断（夜温·温差·溶氧·气压·风）</div>'+
+   '<div style="display:flex;align-items:baseline;gap:8px;margin-top:3px"><span style="font-size:22px;font-weight:800;color:'+(ns>=75?"#52c41a":ns>=60?"#6fd6e0":ns>=45?"#f59e0b":"#e06666")+'">'+ns+'</span><span style="font-size:12px;color:#8fa3c0">分 · '+nl+'</span></div>'+
+   '<div style="font-size:11px;color:#b8c8e0;margin-top:3px;line-height:1.5">'+na+'</div>'+
+  '</div>';
 }
 function futureScore(dy,jqn){
  var s=60,hi=parseFloat(dy.high),lo=parseFloat(dy.low),df=hi-lo;
