@@ -584,7 +584,20 @@ function renderFish(d){
 }
 
 /* ===== P0: 逐小时鱼口评分 + 24h气压趋势/低压预警 ===== */
-function hourScore(h,df){
+function nightDo(hour,baseLow){
+ var d=0;
+ if(hour>=19&&hour<22)d=.08;
+ else if(hour>=22)d=.16;
+ else if(hour>=0&&hour<2)d=.24;
+ else if(hour>=2&&hour<3)d=.30;
+ else if(hour>=3&&hour<4)d=.34;
+ else if(hour>=4&&hour<5)d=.36;
+ else if(hour>=5&&hour<6)d=.28;
+ else if(hour>=6&&hour<8)d=.12;
+ return baseLow*(1-d);
+}
+function isNightHour(hour){return hour>=19||hour<5}
+function hourScore(h,df,hour){
  var s=60,p=parseFloat(h.p),hum=parseInt(h.hum),t=parseFloat(h.t),wn=parseInt(h.wind)||0,rain=parseFloat(h.rain)||0;
  if(isNaN(p)||isNaN(hum)||isNaN(t))return null;
  if(p>=1025)s+=10;else if(p>=1010)s+=6;else if(p>=1000)s+=0;else s-=12;
@@ -593,7 +606,8 @@ function hourScore(h,df){
  if(wn>=1&&wn<=3)s+=6;else if(wn===4)s+=2;else if(wn===5)s-=4;else if(wn>5)s-=10;else s-=2;
  if(rain>0)s+=3;
  if(t>=15&&t<=28)s+=6;else if((t>=8&&t<15)||(t>28&&t<=32))s+=2;else if(t>32||t<8)s-=5;
- var dol=doEst(t).low;if(!isNaN(parseFloat(dol))){if(parseFloat(dol)>=6)s+=4;else if(parseFloat(dol)>=5)s+=2;else s-=4}
+ var base=doEst(t).low,dol=isNightHour(hour)?nightDo(hour,parseFloat(base)):base;
+ if(!isNaN(parseFloat(dol))){if(parseFloat(dol)>=6)s+=4;else if(parseFloat(dol)>=5)s+=2;else s-=4}
  return Math.max(0,Math.min(100,Math.round(s)));
 }
 function goldWindows(arr){
@@ -613,7 +627,7 @@ function renderHourlyScore(x,today){
  var df=parseFloat(today.high)-parseFloat(today.low);
  var arr=[];
  if(hd.time&&hd.temperature_2m)for(var i=0;i<Math.min(24,hd.time.length);i++){
-  var sc=hourScore({p:hd.pressure_msl[i],hum:hd.relative_humidity_2m[i],t:hd.temperature_2m[i],wind:windLevel(hd.wind_speed_10m[i]),rain:hd.precipitation[i]},df);
+  var sc=hourScore({p:hd.pressure_msl[i],hum:hd.relative_humidity_2m[i],t:hd.temperature_2m[i],wind:windLevel(hd.wind_speed_10m[i]),rain:hd.precipitation[i]},df,i);
   arr.push({h:i,s:sc});
  }
  if(!arr.length){box.innerHTML="暂无逐小时数据";return;}
@@ -622,16 +636,22 @@ function renderHourlyScore(x,today){
  for(var i2=0;i2<arr.length;i2++){
   var a=arr[i2],c=a.s>=75?"#52c41a":a.s>=60?"#6fd6e0":a.s>=45?"#f59e0b":"#e06666";
   var hh=Math.max(6,Math.round(a.s/100*92));
-  bars+='<div style="flex:1;display:flex;align-items:flex-end;justify-content:center;height:100px;position:relative">'+
+  var night=isNightHour(a.h);
+  bars+='<div style="flex:1;display:flex;align-items:flex-end;justify-content:center;height:100px;position:relative;border-radius:3px;'+(night?'background:linear-gradient(180deg,rgba(70,110,200,.13),rgba(70,110,200,.03))':'')+'">'+
+   (night?'<span style="position:absolute;top:0;left:50%;transform:translateX(-50%);font-size:9px;color:#7d96d0">🌙</span>':'')+
    '<div style="width:60%;max-width:12px;height:'+hh+'px;border-radius:3px 3px 0 0;background:'+c+';'+(a.s>=65?'box-shadow:0 0 6px '+c:'')+'"></div>'+
    '</div>';
  }
  var tline='<div style="display:flex;justify-content:space-between;font-size:10px;color:#8fa3c0;margin-top:4px"><span>0点</span><span>6点</span><span>12点</span><span>18点</span><span>23点</span></div>';
  var winHtml=wins.length?wins.map(function(g){return "<b style='color:#52c41a'>"+fmtHour(g[0])+"-"+fmtHour(g[1]+1)+"</b>（"+arr[g[0]].s+"~"+arr[g[1]].s+"分）"}).join(" · "):"暂无明确黄金窗口，建议按「最佳出钓」时段作钓";
+ var nightArr=arr.filter(function(a){return isNightHour(a.h)});
+ var nightWins=goldWindows(nightArr);
+ var nightHtml=nightWins.length?nightWins.map(function(g){return "<b style='color:#7d96d0'>"+fmtHour(nightArr[g[0]].h)+"-"+fmtHour(nightArr[g[1]].h+1)+"</b>（"+nightArr[g[0]].s+"~"+nightArr[g[1]].s+"分）"}).join(" · "):"暂无明确夜钓窗口，按夜间段高点 22 点前下竿";
  box.innerHTML='<div style="display:flex;align-items:flex-end;gap:2px;height:104px">'+bars+'</div>'+tline+
-  '<div style="margin-top:8px">🕐 黄金窗口：'+winHtml+'</div>';
+  '<div style="margin-top:8px">🕐 黄金窗口：'+winHtml+'</div>'+
+  '<div style="margin-top:5px">🌙 夜间段（深蓝底色 19-04点，溶氧按夜间下降曲线修正）：'+nightHtml+'</div>';
  var note=document.getElementById("hourly_note");
- if(note)note.textContent="逐小时鱼口分 = 气压/湿度/温差/风力/降水/水温/下层溶氧 加权估算（0-100），≥65 分视为黄金窗口；仅供参考，非实测。";
+ if(note)note.textContent="逐小时鱼口分 = 气压/湿度/温差/风力/降水/水温/下层溶氧 加权估算（0-100），≥65 分视为黄金窗口；夜间段（19-04点）下层溶氧按夜间下降曲线修正（凌晨3-4点全天最低、跌破5mg/L 即扣分），避免凌晨低温误判高分；仅供参考，非实测。";
 }
 function renderPressureTrend(x){
  var box=document.getElementById("pressure_svg");if(!box)return;
