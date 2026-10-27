@@ -124,11 +124,11 @@ svg{width:100%;height:auto;display:block}
 </div>
 
 <div class="page" id="p-bait">
-  <div class="card"><h3>⚖️ 开饵克重计算器（跟随所选方案）</h3>
+  <div class="card"><h3>🥛 开饵量杯计算器（ml · 跟随所选方案）</h3>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-      <span style="font-size:12px;color:#8fa3c0">本次干饵总量</span>
-      <input id="bait_total" type="number" value="200" min="50" max="1000" step="10" style="width:90px;padding:8px;border-radius:8px;border:1px solid rgba(111,214,224,.3);background:#0f1420;color:#e8ecf4;font-size:14px;text-align:center">
-      <span style="font-size:12px;color:#8fa3c0">克</span>
+      <span style="font-size:12px;color:#8fa3c0">本次开饵总量（量杯）</span>
+      <input id="bait_total" type="number" value="300" min="50" max="1500" step="10" style="width:90px;padding:8px;border-radius:8px;border:1px solid rgba(111,214,224,.3);background:#0f1420;color:#e8ecf4;font-size:14px;text-align:center">
+      <span style="font-size:12px;color:#8fa3c0">ml</span>
     </div>
     <div class="body" id="bait_calc">--</div>
   </div>
@@ -136,7 +136,7 @@ svg{width:100%;height:auto;display:block}
   <div class="card"><h3>配方详情</h3><div class="body" id="bait_full">--</div></div>
   <div class="card"><h3>成品状态要求</h3><div class="body" id="bait_state">--</div></div>
   <div class="card"><h3>季节微调</h3><div class="body" id="bait_adj">--</div></div>
-  <div class="note">🔁 点上方任意方案切换配方；螺肉藻鲤需先温水泡开再拌。</div>
+  <div class="note">🔁 点上方任意方案切换配方；螺肉藻鲤需先温水泡开再拌。<br>🥛 量杯计量：蓬松饵 1ml≈1g，水比即杯数比（干饵 X 杯 → 加水 0.9X 杯），按量杯读数填总量即可。</div>
 </div>
 <div class="page" id="p-jieqi">
   <div class="card"><h3>当前节气</h3><div class="body" id="jq_main">--</div></div>
@@ -534,16 +534,16 @@ function waterRatio(w){var m=String(w).match(/(0\.\d+)倍/);return m?parseFloat(
 function renderCalc(){
  var box=document.getElementById("bait_calc");if(!box)return;
  var b=BAITS[selBait],inp=document.getElementById("bait_total");
- var total=inp?parseFloat(inp.value):200;if(isNaN(total)||total<50)total=200;
+ var total=inp?parseFloat(inp.value):300;if(isNaN(total)||total<50)total=300;
  var mx=parseMix(b.f),r=waterRatio(b.w),water=Math.max(0,Math.round(total*r-mx.ml)),rows="";
- mx.items.forEach(function(it){rows+="<tr><td>"+it.n+"</td><td style='text-align:right'><b>"+Math.round(total*it.pct/100)+"g</b></td></tr>"});
+ mx.items.forEach(function(it){rows+="<tr><td>"+it.n+"</td><td style='text-align:right'><b>"+Math.round(total*it.pct/100)+"ml</b></td></tr>"});
  if(mx.ml)rows+="<tr><td>"+(mx.mlName||"水剂")+"</td><td style='text-align:right'><b>"+mx.ml+"ml</b>（计入水量）</td></tr>";
  if(mx.drops)rows+="<tr><td>"+(mx.dropName||"添加剂")+"</td><td style='text-align:right'><b>"+mx.drops+"滴</b></td></tr>";
  var tips={1:"螺肉藻鲤先温水泡10分钟再拌；高蛋白浓腥守夜口"};
  var tip=tips[selBait]||"";
- box.innerHTML="<div style='font-size:12px;color:#8fa3c0;margin-bottom:6px'>"+b.n+" · 干饵总量 <b style='color:#6fd6e0'>"+total+"g</b></div>"+
+ box.innerHTML="<div style='font-size:12px;color:#8fa3c0;margin-bottom:6px'>"+b.n+" · 开饵总量（量杯）<b style='color:#6fd6e0'>"+total+"ml</b></div>"+
   "<table><tr><th>材料</th><th style='text-align:right'>用量</th></tr>"+rows+
-  "<tr><td>💧 加水</td><td style='text-align:right'><b>"+water+"ml</b>（饵重"+r+"倍"+(mx.ml?"，扣除水剂"+mx.ml+"ml":"")+"）</td></tr></table>"+
+  "<tr><td>💧 加水</td><td style='text-align:right'><b>"+water+"ml</b>（饵水体积比 1:"+r+(mx.ml?"，扣除水剂"+mx.ml+"ml":"")+"）</td></tr></table>"+
   (tip?"<div class='note'>⚠️ "+tip+"</div>":"");
 }
 function renderFish(d){
