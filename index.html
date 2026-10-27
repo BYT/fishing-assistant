@@ -136,7 +136,7 @@ svg{width:100%;height:auto;display:block}
   <div class="card"><h3>配方详情</h3><div class="body" id="bait_full">--</div></div>
   <div class="card"><h3>成品状态要求</h3><div class="body" id="bait_state">--</div></div>
   <div class="card"><h3>季节微调</h3><div class="body" id="bait_adj">--</div></div>
-  <div class="note">🔁 点上方任意方案切换配方；乳猪饲料/螺鲤需先温水泡开再拌。</div>
+  <div class="note">🔁 点上方任意方案切换配方；螺肉藻鲤需先温水泡开再拌。</div>
 </div>
 <div class="page" id="p-jieqi">
   <div class="card"><h3>当前节气</h3><div class="body" id="jq_main">--</div></div>
@@ -203,8 +203,8 @@ var JIEQI = {
  "大寒":["隆冬·尾声","活饵、腥","红虫/蚯蚓，腥饵","深水·向阳","鲫15cm，鲤40cm"]
 };
 var BAITS=[
- {n:"🌞 白天饵单",s:"全天候野钓 · 腥香甜广谱",f:"不空军60% + 虾粉20% + 九一八10% + 水母粉3% + 红糖液10ml（温水化开）+ 苹果醋2-3滴",w:"总水量≈饵重0.9倍（红糖液计入水量）",u:"腥香+果酸甜广谱诱鱼，鲫鲤通杀；晴天高压贴底钓、阴雨天靠边浅水；静置3-5分钟醒饵，收拢成团轻打排气",st:"柔软蓬松 / 微粘不瘫 / 能拉能搓 / 中速雾化",ad:"水母粉是状态粉，每100g饵加2-3g勿多；寒露后虾粉按20-25%、苹果醋减半；盛夏闷热段虾粉降到5%、果酸加重提清淡"},
- {n:"🌙 夜钓饵单",s:"18点后 / 雨后 / 降温天",f:"不空军55% + 螺鲤15% + 虾粉20% + 饕餮盛宴5% + 水母粉3% + 药酒2-3滴",w:"总水量≈饵重0.9倍",u:"高蛋白浓腥，夜钓大板鲫、雨后降温开口；螺鲤先温水泡10分钟再拌；药酒穿透力强诱鱼进窝；夜钓近岸深浅交界贴底",st:"柔软蓬松 / 腥香浓 / 雾化中速 / 持钩性好",ad:"药酒每100g饵2-5滴，过量死窝；天冷可加麝香酒1-2滴或红虫粉10g；霜降后加乳猪饲料10-15%增颗粒留窝"}
+ {n:"🌞 白天饵单",s:"全天候野钓 · 腥香甜广谱",f:"不空军60% + 六种肉20% + 饕餮盛宴10% + 蓝鲫X5 10% + 红薯液5ml + 苹果酸2-3滴",w:"总水量≈饵重0.9倍（红薯液计入水量）",u:"腥香+果酸甜广谱诱鱼，鲫鲤通杀；晴天高压贴底钓、阴雨天靠边浅水；静置3-5分钟醒饵，收拢成团轻打排气",st:"柔软蓬松 / 微粘不瘫 / 能拉能搓 / 中速雾化",ad:"蓝鲫X5自带酒米与拉丝，无需另加拉丝粉；寒露后六种肉按20-25%、苹果酸减半；盛夏闷热段六种肉降到5%、果酸加重提清淡；红薯液甜味替代冰糖"},
+ {n:"🌙 夜钓饵单",s:"18点后 / 雨后 / 降温天",f:"不空军55% + 螺肉藻鲤15% + 六种肉25% + 饕餮盛宴5% + 蓝鲫X5 5% + 药酒2-3滴",w:"总水量≈饵重0.9倍",u:"高蛋白浓腥，夜钓大板鲫、雨后降温开口；螺肉藻鲤先温水泡10分钟再拌；药酒穿透力强诱鱼进窝；夜钓近岸深浅交界贴底",st:"柔软蓬松 / 腥香浓 / 雾化中速 / 持钩性好",ad:"药酒每100g饵2-5滴，过量死窝；天冷可加麝香酒1-2滴或千里香粉指甲盖量；霜降后六种肉按25%、可加饕餮盛宴10-15%增颗粒留窝（乳猪饲料缺货时替代）"}
 ];var selBait=0;
 function renderBaitPlans(){
  var box=document.getElementById("bait_plans");if(!box)return;box.innerHTML="";
@@ -494,7 +494,7 @@ function renderScore(d){
  var jqn=jq.name||"";if(["惊蛰","春分","清明","谷雨","白露","秋分","寒露"].indexOf(jqn)>=0)up.push(jqn+"黄金季+5");
  var line=up.length?"✅ "+up.join(" · "):"✅ 各项基本均衡";
  if(dn.length)line+="<br>⚠️ "+dn.join(" · ");
- var advice=sc>=75?"今日鱼情不错，优先冲傍晚黄金窗口，饵用🌞白天饵单（守大物可加螺鲤搓大饵）。":sc>=55?"可以出钓，选最佳窗口作钓，气压平稳以钓底为主，饵用🌞白天饵单。":sc>=40?"鱼情偏差，建议改钓深水/活水口，饵用🌞白天饵单（虾粉减半）或🌙夜钓饵单，夜钓优于白天。":"今天不适合出钓，等气压回升、温差收窄再去。";
+ var advice=sc>=75?"今日鱼情不错，优先冲傍晚黄金窗口，饵用🌞白天饵单（守大物可加螺肉藻鲤搓大饵）。":sc>=55?"可以出钓，选最佳窗口作钓，气压平稳以钓底为主，饵用🌞白天饵单。":sc>=40?"鱼情偏差，建议改钓深水/活水口，饵用🌞白天饵单（六种肉减半）或🌙夜钓饵单，夜钓优于白天。":"今天不适合出钓，等气压回升、温差收窄再去。";
  var ns=nightIndex(live,today,jq),nl=scoreLevel(ns),na=nightAdvice(ns,t,df,p,wn);
  box.innerHTML='<div style="display:flex;align-items:baseline;gap:10px"><span style="font-size:34px;font-weight:800;color:'+(sc>=75?"#52c41a":sc>=60?"#6fd6e0":sc>=45?"#f59e0b":"#e06666")+'">'+sc+'</span><span style="font-size:13px;color:#8fa3c0">分 · '+lv+'</span></div>'+
   scoreBar(sc)+
@@ -518,15 +518,15 @@ function futureScore(dy,jqn){
 function mapToBait(fs,hi,rain){
  if(parseFloat(rain)>0)return "🌞 白天饵单（雨口增腥）或 🌙 夜钓饵单";
  if(fs>=75)return "🌞 白天饵单";
- if(hi>=30)return "🌞 白天饵单（虾粉减半·清淡果酸）";
+ if(hi>=30)return "🌞 白天饵单（六种肉减半·清淡果酸）";
  if(hi<=12)return "🌙 夜钓饵单（可加红虫粉10g）";
  return "🌞 白天饵单";
 }
 function parseMix(f){
  var t=f.replace(/（[^）]*）/g,"").replace(/\([^)]*\)/g,"").replace(/温水化开/g,"");
- var items=[],m,re=/([\u4e00-\u9fa5A-Za-z0-9]+?)(\d+(?:\.\d+)?)%/g;
+ var items=[],m,re=/([\u4e00-\u9fa5A-Za-z0-9]+?)\s*(\d+(?:\.\d+)?)%/g;
  while((m=re.exec(t))!==null)items.push({n:m[1],pct:parseFloat(m[2])});
- var ml=0,mlName="";m=t.match(/([\u4e00-\u9fa5A-Za-z]+?)(\d+(?:\.\d+)?)ml/);if(m){ml=parseFloat(m[2]);mlName=m[1];}
+ var ml=0,mlName="";m=t.match(/([\u4e00-\u9fa5A-Za-z]+?)\s*(\d+(?:\.\d+)?)ml/);if(m){ml=parseFloat(m[2]);mlName=m[1];}
  var drops="",dropName="";m=t.match(/([\u4e00-\u9fa5A-Za-z]+?)(\d+(?:-\d+)?)滴/);if(m){drops=m[2];dropName=m[1];}
  return {items:items,ml:ml,mlName:mlName,drops:drops,dropName:dropName};
 }
@@ -539,7 +539,7 @@ function renderCalc(){
  mx.items.forEach(function(it){rows+="<tr><td>"+it.n+"</td><td style='text-align:right'><b>"+Math.round(total*it.pct/100)+"g</b></td></tr>"});
  if(mx.ml)rows+="<tr><td>"+(mx.mlName||"水剂")+"</td><td style='text-align:right'><b>"+mx.ml+"ml</b>（计入水量）</td></tr>";
  if(mx.drops)rows+="<tr><td>"+(mx.dropName||"添加剂")+"</td><td style='text-align:right'><b>"+mx.drops+"滴</b></td></tr>";
- var tips={1:"螺鲤先温水泡10分钟再拌；高蛋白浓腥守夜口"};
+ var tips={1:"螺肉藻鲤先温水泡10分钟再拌；高蛋白浓腥守夜口"};
  var tip=tips[selBait]||"";
  box.innerHTML="<div style='font-size:12px;color:#8fa3c0;margin-bottom:6px'>"+b.n+" · 干饵总量 <b style='color:#6fd6e0'>"+total+"g</b></div>"+
   "<table><tr><th>材料</th><th style='text-align:right'>用量</th></tr>"+rows+
@@ -706,14 +706,14 @@ function renderJieqi(d){
 }
 function baitFuture(name,nd){
  var text="当前 <b>"+name+"</b> 段：以<b>不空军为主饵底（≥60%）</b>，搭配适量状态饵调状态。";
- if(name==="处暑")text+="<br>📅 距白露约"+nd+"天 → <b>白露后</b>：主攻腥香，虾粉加到15-20g、苹果醋减半，可备蚯蚓红虫；九一八腥香版/红虫粉按比例加入。";
+ if(name==="处暑")text+="<br>📅 距白露约"+nd+"天 → <b>白露后</b>：主攻腥香，六种肉加到15-20g、苹果酸减半，可备蚯蚓红虫；千里香粉/红虫粉按比例加入。";
  else if(name==="白露")text+="<br>📅 距秋分约"+nd+"天 → <b>秋分后</b>：腥香+谷物香均衡，可加嫩玉米粒、麦粒；速攻2号调状态。";
- else if(name==="秋分")text+="<br>📅 距寒露约"+nd+"天 → <b>寒露后</b>：腥饵为主，红虫蚯蚓当主力，虾粉增量。";
+ else if(name==="秋分")text+="<br>📅 距寒露约"+nd+"天 → <b>寒露后</b>：腥饵为主，红虫蚯蚓当主力，六种肉增量。";
  else if(name==="立春"||name==="雨水")text+="<br>📅 下个节气前后：持续腥为主，备足红虫蚯蚓。";
  else if(name==="立夏"||name==="小满"||name==="芒种")text+="<br>📅 下个节气前后：天气更热，转清淡果酸甜，玉米粒备好。";
  else if(name==="立秋")text+="<br>📅 距处暑"+nd+"天 → <b>处暑后</b>：腥香过渡+谷物香，蚯蚓红虫渐入主力。";
  else text+="<br>📅 距下个节气约"+nd+"天：关注转节后的饵料方向（主饵仍以不空军为底）。";
- text+="<br><br>💡 未来搭配预告：九一八腥香版、速攻2号、虾粉、红虫粉、玉米粒、麦粒等按节气节奏提前备好，详见开饵单季节微调。";
+ text+="<br><br>💡 未来搭配预告：饕餮盛宴、六种肉、千里香粉、红虫粉、玉米粒、麦粒等按节气节奏提前备好，详见开饵单季节微调。";
  return text;
 }
 function renderBait(){renderBaitAll();return ""}
