@@ -423,8 +423,62 @@ function drawLayer(li,ji,title,note){
  return s;
 }
 
+function _faKey(d){return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2)}
+function splitHourly(hd){
+ var r={today:hd,yday:null};
+ if(!hd||!hd.time||!hd.time.length)return r;
+ var key=_faKey(new Date())+"T00:00",idx=-1;
+ for(var i=0;i<hd.time.length;i++){if(hd.time[i].indexOf(key)===0){idx=i;break;}}
+ if(idx<=0)return r;
+ var ks=["temperature_2m","relative_humidity_2m","pressure_msl","wind_speed_10m","precipitation","weather_code"];
+ var t2={time:hd.time.slice(idx)},y2={time:hd.time.slice(0,idx)};
+ for(var k=0;k<ks.length;k++){var kk=ks[k];if(hd[kk]){t2[kk]=hd[kk].slice(idx);y2[kk]=hd[kk].slice(0,idx);}}
+ return {today:t2,yday:y2};
+}
+function calcShift(live,today,yday,tH){
+ var r={items:[],adj:0,cap:100,hcap:100,tag:"",level:0};
+ if(!yday||!yday.time||!yday.time.length)return r;
+ function nz(v){v=parseFloat(v);return isNaN(v)?null:v}
+ function maxOf(a){var o=null;if(!a)return null;for(var i=0;i<a.length;i++){var v=nz(a[i]);if(v==null)continue;if(o==null||v>o)o=v;}return o}
+ function minOf(a){var o=null;if(!a)return null;for(var i=0;i<a.length;i++){var v=nz(a[i]);if(v==null)continue;if(o==null||v<o)o=v;}return o}
+ function avgOf(a){var s=0,n=0;if(!a)return null;for(var i=0;i<a.length;i++){var v=nz(a[i]);if(v==null)continue;s+=v;n++;}return n?s/n:null}
+ var yHi=maxOf(yday.temperature_2m),yLo=minOf(yday.temperature_2m);
+ var th=nz(today.high),tl=nz(today.low);
+ var dHi=(th!=null&&yHi!=null)?th-yHi:null;
+ var dLo=(tl!=null&&yLo!=null)?tl-yLo:null;
+ var tChg=null;
+ if(dHi!=null&&dLo!=null)tChg=Math.max(Math.abs(dHi),Math.abs(dLo));
+ else if(dHi!=null)tChg=Math.abs(dHi);
+ else if(dLo!=null)tChg=Math.abs(dLo);
+ if(tChg!=null&&tChg>=4){r.items.push("气温日变动"+tChg.toFixed(0)+"℃");r.level++}
+ var yHum=avgOf(yday.relative_humidity_2m),lh=nz(live.humidity);
+ var dHum=(lh!=null&&yHum!=null)?lh-yHum:null;
+ if(dHum!=null&&Math.abs(dHum)>=30){r.items.push("湿度骤变"+Math.abs(dHum).toFixed(0)+"pt");r.level++}
+ else if(dHum!=null&&Math.abs(dHum)>=20){r.items.push("湿度变动"+Math.abs(dHum).toFixed(0)+"pt");r.level++}
+ var yP=avgOf(yday.pressure_msl),lp=nz(live.pressure);
+ var dP=(lp!=null&&yP!=null)?lp-yP:null;
+ if(dP!=null&&Math.abs(dP)>=4){r.items.push("气压日变动"+Math.abs(dP).toFixed(0)+"hPa");r.level++}
+ var yW=avgOf(yday.wind_speed_10m),tW=tH?avgOf(tH.wind_speed_10m):null;
+ var w1=(yW!=null)?windLevel(yW):null,w2=(tW!=null)?windLevel(tW):null;
+ if(w1!=null&&w2!=null&&(w2-w1)>=1&&w2>=4){r.items.push("风力升"+(w2-w1)+"级至"+w2+"级");r.level++}
+ var df=(th!=null&&tl!=null)?th-tl:null;
+ if(df!=null&&df>=13){r.items.push("温差"+df.toFixed(0)+"℃过大");r.level++}
+ if(r.level>=3){r.adj=-15;r.cap=68;r.hcap=75;r.tag="天气剧变日 · 评分已降级（总分封顶68）"}
+ else if(r.level===2){r.adj=-9;r.cap=78;r.hcap=82;r.tag="天气过渡日 · 评分已降级（总分封顶78）"}
+ else if(r.level===1){r.adj=-5;r.cap=88;r.hcap=92;r.tag="天气有波动 · 小幅扣分"}
+ if(tChg!=null&&tChg>=4&&r.cap>78){r.cap=78;r.hcap=82;r.level=Math.max(r.level,2);
+  if(r.tag.indexOf("过渡日")<0)r.tag="降温/回温首日 · 按适应日降级（总分封顶78）";}
+ return r;
+}
+function applyShift(s,shift,isHour){
+ if(!shift)return s;
+ var out=s+(shift.adj||0);
+ var cap=isHour?(shift.hcap||100):(shift.cap||100);
+ if(out>cap)out=cap;
+ return out;
+}
 function scoreLevel(s){return s>=85?"极佳":s>=75?"很好":s>=65?"不错":s>=55?"一般":s>=40?"偏差":"很差"}
-function nightIndex(live,today,jq){
+function nightIndex(live,today,jq,shift){
  var s=60,p=parseFloat(live.pressure),h=parseInt(live.humidity);
  var hi=parseFloat(today.high),lo=parseFloat(today.low),df=hi-lo;
  var wn=windNum(live.wind_level),t=parseFloat(live.temp),wstr=live.weather||"";
@@ -438,6 +492,7 @@ function nightIndex(live,today,jq){
  var dol=doEst(t).low;if(!isNaN(parseFloat(dol))){if(parseFloat(dol)>=5.5)s+=4;else if(parseFloat(dol)>=5)s+=2;else s-=4}
  var gold=["惊蛰","春分","清明","谷雨","白露","秋分","寒露"],bad=["小暑","大暑","小寒","大寒","冬至"];
  if(gold.indexOf(jq.name)>=0)s+=5;else if(bad.indexOf(jq.name)>=0)s-=3;
+ s=applyShift(s,shift,false);
  return Math.max(0,Math.min(100,Math.round(s)));
 }
 function nightAdvice(ns,t,df,p,wn){
@@ -455,7 +510,7 @@ function nightAdvice(ns,t,df,p,wn){
  if(more.length)s+="；"+more.join("，");
  return s;
 }
-function scoreIndex(live,today,jq){
+function scoreIndex(live,today,jq,shift){
  var s=60,p=parseFloat(live.pressure),h=parseInt(live.humidity);
  var hi=parseFloat(today.high),lo=parseFloat(today.low),df=hi-lo;
  var wn=windNum(live.wind_level),t=parseFloat(live.temp),wstr=live.weather||"";
@@ -468,6 +523,7 @@ function scoreIndex(live,today,jq){
  var dol=doEst(t).low;if(!isNaN(parseFloat(dol))){if(parseFloat(dol)>=6)s+=4;else if(parseFloat(dol)>=5)s+=2;else s-=4}
  var gold=["惊蛰","春分","清明","谷雨","白露","秋分","寒露"],bad=["小暑","大暑","小寒","大寒","冬至"];
  if(gold.indexOf(jq.name)>=0)s+=5;else if(bad.indexOf(jq.name)>=0)s-=3;
+ s=applyShift(s,shift,false);
  return Math.max(0,Math.min(100,Math.round(s)));
 }
 function bestWindow(t){
@@ -481,7 +537,7 @@ function scoreBar(sc){var c=sc>=75?"#52c41a":sc>=60?"#6fd6e0":sc>=45?"#f59e0b":"
 function renderScore(d){
  var box=document.getElementById("score_card");if(!box)return;
  var live=d.live||{},today=d.today||{},jq=d.jieqi||{};
- var sc=scoreIndex(live,today,jq),lv=scoreLevel(sc),t=parseFloat(live.temp);
+ var sc=scoreIndex(live,today,jq,d.shift),lv=scoreLevel(sc),t=parseFloat(live.temp);
  var p=parseFloat(live.pressure),h=parseInt(live.humidity),hi=parseFloat(today.high),lo=parseFloat(today.low),df=hi-lo;
  var up=[],dn=[];
  if(p>=1025)up.push("气压高压+10");else if(p>=1010)up.push("气压正常+6");else if(p<1000)dn.push("低压-12");
@@ -494,8 +550,9 @@ function renderScore(d){
  var jqn=jq.name||"";if(["惊蛰","春分","清明","谷雨","白露","秋分","寒露"].indexOf(jqn)>=0)up.push(jqn+"黄金季+5");
  var line=up.length?"✅ "+up.join(" · "):"✅ 各项基本均衡";
  if(dn.length)line+="<br>⚠️ "+dn.join(" · ");
+ if(d.shift&&d.shift.tag)line+="<br><b style='color:#f59e0b'>⚡ "+d.shift.tag+"</b>"+(d.shift.items.length?"：" + d.shift.items.join("、"):"");
  var advice=sc>=75?"今日鱼情不错，优先冲傍晚黄金窗口，饵用🌞白天饵单（守大物可加螺肉藻鲤搓大饵）。":sc>=55?"可以出钓，选最佳窗口作钓，气压平稳以钓底为主，饵用🌞白天饵单。":sc>=40?"鱼情偏差，建议改钓深水/活水口，饵用🌞白天饵单（六种肉减半）或🌙夜钓饵单，夜钓优于白天。":"今天不适合出钓，等气压回升、温差收窄再去。";
- var ns=nightIndex(live,today,jq),nl=scoreLevel(ns),na=nightAdvice(ns,t,df,p,wn);
+ var ns=nightIndex(live,today,jq,d.shift),nl=scoreLevel(ns),na=nightAdvice(ns,t,df,p,wn);
  box.innerHTML='<div style="display:flex;align-items:baseline;gap:10px"><span style="font-size:34px;font-weight:800;color:'+(sc>=75?"#52c41a":sc>=60?"#6fd6e0":sc>=45?"#f59e0b":"#e06666")+'">'+sc+'</span><span style="font-size:13px;color:#8fa3c0">分 · '+lv+'</span></div>'+
   scoreBar(sc)+
   '🕐 最佳出钓：<b style="color:#6fd6e0">'+bestWindow(t)+'</b><br><span style="font-size:11px;color:#8fa3c0">'+line+'</span><br><br>💡 '+advice+
@@ -597,7 +654,7 @@ function nightDo(hour,baseLow){
  return baseLow*(1-d);
 }
 function isNightHour(hour){return hour>=19||hour<5}
-function hourScore(h,df,hour){
+function hourScore(h,df,hour,shift){
  var s=60,p=parseFloat(h.p),hum=parseInt(h.hum),t=parseFloat(h.t),wn=parseInt(h.wind)||0,rain=parseFloat(h.rain)||0;
  if(isNaN(p)||isNaN(hum)||isNaN(t))return null;
  if(p>=1025)s+=10;else if(p>=1010)s+=6;else if(p>=1000)s+=0;else s-=12;
@@ -608,6 +665,7 @@ function hourScore(h,df,hour){
  if(t>=15&&t<=28)s+=6;else if((t>=8&&t<15)||(t>28&&t<=32))s+=2;else if(t>32||t<8)s-=5;
  var base=doEst(t).low,dol=isNightHour(hour)?nightDo(hour,parseFloat(base)):base;
  if(!isNaN(parseFloat(dol))){if(parseFloat(dol)>=6)s+=4;else if(parseFloat(dol)>=5)s+=2;else s-=4}
+ s=applyShift(s,shift,true);
  return Math.max(0,Math.min(100,Math.round(s)));
 }
 function goldWindows(arr){
@@ -621,13 +679,13 @@ function goldWindows(arr){
  return merged.filter(function(g){return g[1]-g[0]+1>=2});
 }
 function fmtHour(h){return ("0"+h).slice(-2)+":00"}
-function renderHourlyScore(x,today){
+function renderHourlyScore(x,today,shift){
  var box=document.getElementById("hourly_score");if(!box)return;
  var hd=x.hourly||{};
  var df=parseFloat(today.high)-parseFloat(today.low);
  var arr=[];
  if(hd.time&&hd.temperature_2m)for(var i=0;i<Math.min(24,hd.time.length);i++){
-  var sc=hourScore({p:hd.pressure_msl[i],hum:hd.relative_humidity_2m[i],t:hd.temperature_2m[i],wind:windLevel(hd.wind_speed_10m[i]),rain:hd.precipitation[i]},df,i);
+  var sc=hourScore({p:hd.pressure_msl[i],hum:hd.relative_humidity_2m[i],t:hd.temperature_2m[i],wind:windLevel(hd.wind_speed_10m[i]),rain:hd.precipitation[i]},df,i,shift);
   arr.push({h:i,s:sc});
  }
  if(!arr.length){box.innerHTML="暂无逐小时数据";return;}
@@ -651,7 +709,7 @@ function renderHourlyScore(x,today){
   '<div style="margin-top:8px">🕐 黄金窗口：'+winHtml+'</div>'+
   '<div style="margin-top:5px">🌙 夜间段（深蓝底色 19-04点，溶氧按夜间下降曲线修正）：'+nightHtml+'</div>';
  var note=document.getElementById("hourly_note");
- if(note)note.textContent="逐小时鱼口分 = 气压/湿度/温差/风力/降水/水温/下层溶氧 加权估算（0-100），≥65 分视为黄金窗口；夜间段（19-04点）下层溶氧按夜间下降曲线修正（凌晨3-4点全天最低、跌破5mg/L 即扣分），避免凌晨低温误判高分；仅供参考，非实测。";
+ if(note)note.textContent="逐小时鱼口分 = 气压/湿度/温差/风力/降水/水温/下层溶氧 加权估算，并含天气剧变检测（跨日气温/湿度/气压/风力变动扣分，剧变日封顶），≥65 分视为黄金窗口；夜间段（19-04点）下层溶氧按夜间下降曲线修正（凌晨3-4点全天最低、跌破5mg/L 即扣分），避免凌晨低温误判高分；仅供参考，非实测。";
 }
 function renderPressureTrend(x){
  var box=document.getElementById("pressure_svg");if(!box)return;
@@ -862,7 +920,7 @@ function loadWeather(city){
     "&current=temperature_2m,relative_humidity_2m,apparent_temperature,pressure_msl,wind_speed_10m,wind_direction_10m,weather_code,precipitation"+
     "&hourly=temperature_2m,relative_humidity_2m,pressure_msl,wind_speed_10m,precipitation,weather_code"+
     "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,sunrise,sunset"+
-    "&timezone=auto&wind_speed_unit=ms&forecast_days=7";
+    "&timezone=auto&wind_speed_unit=ms&forecast_days=7&past_days=1";
   fetch(u,{cache:"no-store"}).then(function(r){return r.json()}).then(function(x){renderWeather(x,city)})
   .catch(function(){document.getElementById("cP").textContent="天气数据获取失败，请检查手机网络"});
 }
@@ -871,16 +929,21 @@ function renderWeather(x,city){
   var live={temp:cur.temperature_2m,humidity:cur.relative_humidity_2m,apparent:cur.apparent_temperature,
     pressure:cur.pressure_msl,wind_dir:windDir(cur.wind_direction_10m),wind_level:windLevel(cur.wind_speed_10m)+"级",
     rain:cur.precipitation,weather:wmo2zh(cur.weather_code)};
-  var today={high:day.temperature_2m_max?day.temperature_2m_max[0]:null,low:day.temperature_2m_min?day.temperature_2m_min[0]:null,
-    weather:wmo2zh(day.weather_code?day.weather_code[0]:0)};
+  var _tk=_faKey(new Date());
+  var _di=(day.time||[]).indexOf(_tk);if(_di<0)_di=0;
+  var today={high:day.temperature_2m_max?day.temperature_2m_max[_di]:null,low:day.temperature_2m_min?day.temperature_2m_min[_di]:null,
+    weather:wmo2zh(day.weather_code?day.weather_code[_di]:0)};
   var days3=[];
-  if(day.time)for(var i=0;i<Math.min(3,day.time.length);i++){
+  if(day.time)for(var i=_di;i<Math.min(_di+3,day.time.length);i++){
     days3.push({date:day.time[i].slice(5).replace("-","/"),weather:wmo2zh(day.weather_code[i]),
       high:day.temperature_2m_max[i],low:day.temperature_2m_min[i],
       rain:day.precipitation_sum?day.precipitation_sum[i]:0,wind:""});
   }
+  var sp=splitHourly(x.hourly||null);
+  x.hourly=sp.today;
+  var shift=calcShift(live,today,sp.yday,sp.today);
   var jq=jsJieqi(new Date());
-  var d={city:city,live:live,today:today,days3:days3,jieqi:jq,alarms:[],hourly:x.hourly||null};
+  var d={city:city,live:live,today:today,days3:days3,jieqi:jq,alarms:[],hourly:x.hourly||null,shift:shift};
   document.getElementById("citybar").textContent=d.city+" · "+jq.name;
   var l=d.live;
   document.getElementById("wtemp").innerHTML=(l.temp!=null?Math.round(l.temp):"--")+"<small>℃</small>";
@@ -892,7 +955,7 @@ function renderWeather(x,city){
   mm.push("降雨 <b>"+(l.rain&&l.rain>0?l.rain+"mm":"无")+"</b>");
   mm.push("温差 <b>"+(d.today?((parseFloat(d.today.high)-parseFloat(d.today.low)).toFixed(0))+"℃":"--")+"</b>");
   document.getElementById("wmeta").innerHTML=mm.join(" · ");
-  try{renderHourlyScore(x,d.today)}catch(e){}
+  try{renderHourlyScore(x,d.today,d.shift)}catch(e){}
   try{var _pc=renderPressureTrend(x);lowPressAlert(_pc)}catch(e){}
   try{renderFish(d)}catch(e){}try{renderJieqi(d)}catch(e){}
   document.getElementById("netbar").textContent="数据在线";
