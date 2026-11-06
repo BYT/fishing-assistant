@@ -425,15 +425,41 @@ function drawLayer(li,ji,title,note){
 
 function _faKey(d){return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2)}
 function splitHourly(hd){
- var r={today:hd,yday:null};
+ var r={today:hd,yday:null,dbd:null};
  if(!hd||!hd.time||!hd.time.length)return r;
- var key=_faKey(new Date())+"T00:00",idx=-1;
- for(var i=0;i<hd.time.length;i++){if(hd.time[i].indexOf(key)===0){idx=i;break;}}
- if(idx<=0)return r;
  var ks=["temperature_2m","relative_humidity_2m","pressure_msl","wind_speed_10m","precipitation","weather_code"];
- var t2={time:hd.time.slice(idx)},y2={time:hd.time.slice(0,idx)};
- for(var k=0;k<ks.length;k++){var kk=ks[k];if(hd[kk]){t2[kk]=hd[kk].slice(idx);y2[kk]=hd[kk].slice(0,idx);}}
- return {today:t2,yday:y2};
+ var n=new Date();
+ function key(off){var d=new Date(n.getFullYear(),n.getMonth(),n.getDate()-off);return _faKey(d)}
+ function find(k){for(var i=0;i<hd.time.length;i++){if(hd.time[i].indexOf(k+"T00:00")===0)return i}return -1}
+ function cut(s,e){var o={time:hd.time.slice(s,e)};for(var k=0;k<ks.length;k++){var kk=ks[k];if(hd[kk])o[kk]=hd[kk].slice(s,e);}return o}
+ var i0=find(key(0)),i1=find(key(1)),i2=find(key(2));
+ if(i0<0)return r;
+ r.today=cut(i0,hd.time.length);
+ if(i1>=0&&i0>i1)r.yday=cut(i1,i0);
+ if(i2>=0&&i1>i2)r.dbd=cut(i2,i1);
+ return r;
+}
+/* 气压回压判定：必须“连续2天不降”才算回压（昨日≥前日 且 今日≥昨日，且至少涨过一次） */
+function pressPhase(live,yday,dbd,today){
+ var r={p0:null,p1:null,p2:null,d1:null,d2:null,state:"unknown",label:"",note:"",adj:0};
+ function nz(v){v=parseFloat(v);return isNaN(v)?null:v}
+ function avg(a){var s=0,n=0;if(!a)return null;for(var i=0;i<a.length;i++){var v=nz(a[i]);if(v==null)continue;s+=v;n++;}return n?s/n:null}
+ var p0=nz(live&&live.pressure);
+ var p1=yday?avg(yday.pressure_msl):null;
+ var p2=dbd?avg(dbd.pressure_msl):null;
+ if(p0==null&&today)p0=avg(today.pressure_msl);
+ r.p0=p0;r.p1=p1;r.p2=p2;
+ if(p0==null||p1==null){r.label="气压趋势数据不足，暂不判定回压";return r}
+ if(p2==null){r.d1=p0-p1;r.state="weak";r.label="仅有昨日数据，需连续2天才能判定回压";return r}
+ var d1=p0-p1,d2=p1-p2;r.d1=d1;r.d2=d2;
+ if(d2>0.5&&d1>=0){r.state="confirmed";r.label="回压确认（连续2天不降）";r.adj=3}
+ else if(Math.abs(d1)<=0.5&&Math.abs(d2)<=0.5){r.state="flat";r.label="连续2天走平（止跌企稳，不算回压）"}
+ else if(d1>0.5&&d2<=0.5){r.state="oneDay";r.label="单日回升（前日未涨，未确认回压）"}
+ else if(d1<0){r.state="down";r.label="气压仍在下降（不算回压）";r.adj=-3}
+ else {r.state="weak";r.label="未见连续回升（不算回压）"}
+ function f(v){return v==null?"--":v.toFixed(0)}
+ r.note="日均 前日"+f(p2)+" → 昨日"+f(p1)+" → 今日"+f(p0)+" hPa（今日较昨日"+(d1>=0?"+":"")+d1.toFixed(1)+"）";
+ return r;
 }
 function calcShift(live,today,yday,tH){
  var r={items:[],adj:0,cap:100,hcap:100,tag:"",level:0};
@@ -478,7 +504,7 @@ function applyShift(s,shift,isHour){
  return out;
 }
 function scoreLevel(s){return s>=85?"极佳":s>=75?"很好":s>=65?"不错":s>=55?"一般":s>=40?"偏差":"很差"}
-function nightIndex(live,today,jq,shift){
+function nightIndex(live,today,jq,shift,phase){
  var s=60,p=parseFloat(live.pressure),h=parseInt(live.humidity);
  var hi=parseFloat(today.high),lo=parseFloat(today.low),df=hi-lo;
  var wn=windNum(live.wind_level),t=parseFloat(live.temp),wstr=live.weather||"";
@@ -492,6 +518,7 @@ function nightIndex(live,today,jq,shift){
  var dol=doEst(t).low;if(!isNaN(parseFloat(dol))){if(parseFloat(dol)>=5.5)s+=4;else if(parseFloat(dol)>=5)s+=2;else s-=4}
  var gold=["惊蛰","春分","清明","谷雨","白露","秋分","寒露"],bad=["小暑","大暑","小寒","大寒","冬至"];
  if(gold.indexOf(jq.name)>=0)s+=5;else if(bad.indexOf(jq.name)>=0)s-=3;
+ if(phase&&phase.state==="confirmed")s+=3;else if(phase&&phase.state==="down")s-=3;
  s=applyShift(s,shift,false);
  return Math.max(0,Math.min(100,Math.round(s)));
 }
@@ -510,7 +537,7 @@ function nightAdvice(ns,t,df,p,wn){
  if(more.length)s+="；"+more.join("，");
  return s;
 }
-function scoreIndex(live,today,jq,shift){
+function scoreIndex(live,today,jq,shift,phase){
  var s=60,p=parseFloat(live.pressure),h=parseInt(live.humidity);
  var hi=parseFloat(today.high),lo=parseFloat(today.low),df=hi-lo;
  var wn=windNum(live.wind_level),t=parseFloat(live.temp),wstr=live.weather||"";
@@ -523,6 +550,7 @@ function scoreIndex(live,today,jq,shift){
  var dol=doEst(t).low;if(!isNaN(parseFloat(dol))){if(parseFloat(dol)>=6)s+=4;else if(parseFloat(dol)>=5)s+=2;else s-=4}
  var gold=["惊蛰","春分","清明","谷雨","白露","秋分","寒露"],bad=["小暑","大暑","小寒","大寒","冬至"];
  if(gold.indexOf(jq.name)>=0)s+=5;else if(bad.indexOf(jq.name)>=0)s-=3;
+ if(phase&&phase.state==="confirmed")s+=3;else if(phase&&phase.state==="down")s-=3;
  s=applyShift(s,shift,false);
  return Math.max(0,Math.min(100,Math.round(s)));
 }
@@ -537,10 +565,12 @@ function scoreBar(sc){var c=sc>=75?"#52c41a":sc>=60?"#6fd6e0":sc>=45?"#f59e0b":"
 function renderScore(d){
  var box=document.getElementById("score_card");if(!box)return;
  var live=d.live||{},today=d.today||{},jq=d.jieqi||{};
- var sc=scoreIndex(live,today,jq,d.shift),lv=scoreLevel(sc),t=parseFloat(live.temp);
+ var sc=scoreIndex(live,today,jq,d.shift,d.phase),lv=scoreLevel(sc),t=parseFloat(live.temp);
  var p=parseFloat(live.pressure),h=parseInt(live.humidity),hi=parseFloat(today.high),lo=parseFloat(today.low),df=hi-lo;
  var up=[],dn=[];
  if(p>=1025)up.push("气压高压+10");else if(p>=1010)up.push("气压正常+6");else if(p<1000)dn.push("低压-12");
+ var ph=d.phase;
+ if(ph&&ph.state==="confirmed")up.push("气压回压确认+3");else if(ph&&ph.state==="down")dn.push("气压仍降-3（非回压）");
  if(h>=50&&h<70)up.push("湿度适中+6");else if(h>=95)dn.push("高湿缺氧-8");else if(h>=85)dn.push("湿度偏高-4");
  if(!isNaN(df)){if(df>=6&&df<=10)up.push("温差"+df+"℃适中+6");else if(df>14)dn.push("温差"+df+"℃过大-4");else if(df<6)dn.push("温差"+df+"℃偏小-3")}
  var wn=windNum(live.wind_level);
@@ -551,8 +581,9 @@ function renderScore(d){
  var line=up.length?"✅ "+up.join(" · "):"✅ 各项基本均衡";
  if(dn.length)line+="<br>⚠️ "+dn.join(" · ");
  if(d.shift&&d.shift.tag)line+="<br><b style='color:#f59e0b'>⚡ "+d.shift.tag+"</b>"+(d.shift.items.length?"：" + d.shift.items.join("、"):"");
+ if(d.phase&&d.phase.label)line+="<br><b style='color:#8fa3c0'>📉 "+d.phase.label+"</b>"+(d.phase.note?"｜"+d.phase.note:"");
  var advice=sc>=75?"今日鱼情不错，优先冲傍晚黄金窗口，饵用🌞白天饵单（守大物可加螺肉藻鲤搓大饵）。":sc>=55?"可以出钓，选最佳窗口作钓，气压平稳以钓底为主，饵用🌞白天饵单。":sc>=40?"鱼情偏差，建议改钓深水/活水口，饵用🌞白天饵单（六种肉减半）或🌙夜钓饵单，夜钓优于白天。":"今天不适合出钓，等气压回升、温差收窄再去。";
- var ns=nightIndex(live,today,jq,d.shift),nl=scoreLevel(ns),na=nightAdvice(ns,t,df,p,wn);
+ var ns=nightIndex(live,today,jq,d.shift,d.phase),nl=scoreLevel(ns),na=nightAdvice(ns,t,df,p,wn);
  box.innerHTML='<div style="display:flex;align-items:baseline;gap:10px"><span style="font-size:34px;font-weight:800;color:'+(sc>=75?"#52c41a":sc>=60?"#6fd6e0":sc>=45?"#f59e0b":"#e06666")+'">'+sc+'</span><span style="font-size:13px;color:#8fa3c0">分 · '+lv+'</span></div>'+
   scoreBar(sc)+
   '🕐 最佳出钓：<b style="color:#6fd6e0">'+bestWindow(t)+'</b><br><span style="font-size:11px;color:#8fa3c0">'+line+'</span><br><br>💡 '+advice+
@@ -709,7 +740,7 @@ function renderHourlyScore(x,today,shift){
   '<div style="margin-top:8px">🕐 黄金窗口：'+winHtml+'</div>'+
   '<div style="margin-top:5px">🌙 夜间段（深蓝底色 19-04点，溶氧按夜间下降曲线修正）：'+nightHtml+'</div>';
  var note=document.getElementById("hourly_note");
- if(note)note.textContent="逐小时鱼口分 = 气压/湿度/温差/风力/降水/水温/下层溶氧 加权估算，并含天气剧变检测（跨日气温/湿度/气压/风力变动扣分，剧变日封顶），≥65 分视为黄金窗口；夜间段（19-04点）下层溶氧按夜间下降曲线修正（凌晨3-4点全天最低、跌破5mg/L 即扣分），避免凌晨低温误判高分；仅供参考，非实测。";
+ if(note)note.textContent="逐小时鱼口分 = 气压/湿度/温差/风力/降水/水温/下层溶氧 加权估算，并含天气剧变检测（跨日气温/湿度/气压/风力变动扣分，剧变日封顶）+ 气压回压判定（须连续2天不降，单日回升不算回压），≥65 分视为黄金窗口；夜间段（19-04点）下层溶氧按夜间下降曲线修正（凌晨3-4点全天最低、跌破5mg/L 即扣分），避免凌晨低温误判高分；仅供参考，非实测。";
 }
 function renderPressureTrend(x){
  var box=document.getElementById("pressure_svg");if(!box)return;
@@ -741,7 +772,9 @@ function renderPressureTrend(x){
  if(cur<1000)parts.push("当前 <b style='color:#e06666'>"+Math.round(cur)+"hPa</b>：低压缺氧，鱼易离底上浮、口差，慎钓或钓离底/半水");
  else if(cur<1005)parts.push("当前 <b style='color:#f59e0b'>"+Math.round(cur)+"hPa</b>：气压偏低，鱼活性一般，钓底为主可钓离底");
  else parts.push("当前 <b style='color:#52c41a'>"+Math.round(cur)+"hPa</b>：气压正常/偏高，鱼贴底活性好");
- parts.push("24h走势：<b>"+trend+"</b>"+(trend==="下降"?"（气压走低，鱼口趋差，宜早不宜晚）":trend==="上升"?"（气压回升，鱼口趋好）":""));
+ var ph=x.phase;
+ parts.push("24h走势：<b>"+trend+"</b>"+(trend==="下降"?"（气压走低，鱼口趋差，宜早不宜晚）":trend==="上升"?(ph&&ph.state==="confirmed"?"（回压确认，鱼口趋好）":"（单日回升，未确认回压）"):""));
+ if(ph&&ph.label)parts.push("跨日气压：<b style='color:"+(ph.state==="confirmed"?"#52c41a":(ph.state==="down"?"#e06666":"#f59e0b"))+"'>"+ph.label+"</b>");
  if(verdict)verdict.innerHTML="<span style='font-size:12px'>"+parts.join("；")+"</span>";
  return cur;
 }
@@ -920,7 +953,7 @@ function loadWeather(city){
     "&current=temperature_2m,relative_humidity_2m,apparent_temperature,pressure_msl,wind_speed_10m,wind_direction_10m,weather_code,precipitation"+
     "&hourly=temperature_2m,relative_humidity_2m,pressure_msl,wind_speed_10m,precipitation,weather_code"+
     "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,sunrise,sunset"+
-    "&timezone=auto&wind_speed_unit=ms&forecast_days=7&past_days=1";
+    "&timezone=auto&wind_speed_unit=ms&forecast_days=7&past_days=2";
   fetch(u,{cache:"no-store"}).then(function(r){return r.json()}).then(function(x){renderWeather(x,city)})
   .catch(function(){document.getElementById("cP").textContent="天气数据获取失败，请检查手机网络"});
 }
@@ -942,8 +975,10 @@ function renderWeather(x,city){
   var sp=splitHourly(x.hourly||null);
   x.hourly=sp.today;
   var shift=calcShift(live,today,sp.yday,sp.today);
+  var phase=pressPhase(live,sp.yday,sp.dbd,sp.today);
+  x.phase=phase;
   var jq=jsJieqi(new Date());
-  var d={city:city,live:live,today:today,days3:days3,jieqi:jq,alarms:[],hourly:x.hourly||null,shift:shift};
+  var d={city:city,live:live,today:today,days3:days3,jieqi:jq,alarms:[],hourly:x.hourly||null,shift:shift,phase:phase};
   document.getElementById("citybar").textContent=d.city+" · "+jq.name;
   var l=d.live;
   document.getElementById("wtemp").innerHTML=(l.temp!=null?Math.round(l.temp):"--")+"<small>℃</small>";
