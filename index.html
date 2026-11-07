@@ -504,7 +504,7 @@ function applyShift(s,shift,isHour){
  return out;
 }
 function scoreLevel(s){return s>=85?"极佳":s>=75?"很好":s>=65?"不错":s>=55?"一般":s>=40?"偏差":"很差"}
-function nightIndex(live,today,jq,shift,phase){
+function nightIndex(live,today,jq,shift,phase,hourly){
  var s=60,p=parseFloat(live.pressure),h=parseInt(live.humidity);
  var hi=parseFloat(today.high),lo=parseFloat(today.low),df=hi-lo;
  var wn=windNum(live.wind_level),t=parseFloat(live.temp),wstr=live.weather||"";
@@ -519,12 +519,18 @@ function nightIndex(live,today,jq,shift,phase){
  var gold=["惊蛰","春分","清明","谷雨","白露","秋分","寒露"],bad=["小暑","大暑","小寒","大寒","冬至"];
  if(gold.indexOf(jq.name)>=0)s+=5;else if(bad.indexOf(jq.name)>=0)s-=3;
  if(phase&&phase.state==="confirmed")s+=3;else if(phase&&phase.state==="down")s-=3;
+ var nd=nightDrop(hourly),cap=100;
+ if(nd.level===3){s-=16;cap=55}
+ else if(nd.level===2){s-=12;cap=62}
+ else if(nd.level===1){s-=5;cap=78}
  s=applyShift(s,shift,false);
- return Math.max(0,Math.min(100,Math.round(s)));
+ var shiftCap=shift?(shift.cap||100):100;
+ return Math.max(0,Math.min(Math.min(cap,shiftCap),Math.round(s)));
 }
-function nightAdvice(ns,t,df,p,wn){
+function nightAdvice(ns,t,df,p,wn,nd){
  var s="";
- if(ns>=75)s="夜间鱼情很好，19:00-22:30 夜钓窗口佳，钓底/中下层，饵用 🌙 夜钓饵单";
+ if(nd&&nd.level>=2)s="❄️ 夜间降温快（19点 "+nd.base.toFixed(0)+"℃ → 次日4点 "+nd.last.toFixed(0)+"℃，累计降 "+nd.total.toFixed(1)+"℃）：鱼在应激期，只打 19:00-21:00 前半夜窗口，21点后基本停口，钓深水贴底、饵加重腥";
+ else if(ns>=75)s="夜间鱼情很好，19:00-22:30 夜钓窗口佳，钓底/中下层，饵用 🌙 夜钓饵单";
  else if(ns>=55)s="夜间可钓，卡 19:00-21:00 入夜补食潮，中下层守，饵用 🌙 夜钓饵单";
  else if(ns>=40)s="夜间偏差，降温/溶氧限制口稀，钓深水守底，22点前收竿";
  else s="夜间不适合出钓，等回暖或气压回升再夜钓";
@@ -583,7 +589,8 @@ function renderScore(d){
  if(d.shift&&d.shift.tag)line+="<br><b style='color:#f59e0b'>⚡ "+d.shift.tag+"</b>"+(d.shift.items.length?"：" + d.shift.items.join("、"):"");
  if(d.phase&&d.phase.label)line+="<br><b style='color:#8fa3c0'>📉 "+d.phase.label+"</b>"+(d.phase.note?"｜"+d.phase.note:"");
  var advice=sc>=75?"今日鱼情不错，优先冲傍晚黄金窗口，饵用🌞白天饵单（守大物可加螺肉藻鲤搓大饵）。":sc>=55?"可以出钓，选最佳窗口作钓，气压平稳以钓底为主，饵用🌞白天饵单。":sc>=40?"鱼情偏差，建议改钓深水/活水口，饵用🌞白天饵单（六种肉减半）或🌙夜钓饵单，夜钓优于白天。":"今天不适合出钓，等气压回升、温差收窄再去。";
- var ns=nightIndex(live,today,jq,d.shift,d.phase),nl=scoreLevel(ns),na=nightAdvice(ns,t,df,p,wn);
+ var nd=nightDrop(d.hourly);
+ var ns=nightIndex(live,today,jq,d.shift,d.phase,d.hourly),nl=scoreLevel(ns),na=nightAdvice(ns,t,df,p,wn,nd);
  box.innerHTML='<div style="display:flex;align-items:baseline;gap:10px"><span style="font-size:34px;font-weight:800;color:'+(sc>=75?"#52c41a":sc>=60?"#6fd6e0":sc>=45?"#f59e0b":"#e06666")+'">'+sc+'</span><span style="font-size:13px;color:#8fa3c0">分 · '+lv+'</span></div>'+
   scoreBar(sc)+
   '🕐 最佳出钓：<b style="color:#6fd6e0">'+bestWindow(t)+'</b><br><span style="font-size:11px;color:#8fa3c0">'+line+'</span><br><br>💡 '+advice+
@@ -591,6 +598,7 @@ function renderScore(d){
    '<div style="font-size:12px;font-weight:600;color:#6fd6e0">🌙 夜间出钓判断（夜温·温差·溶氧·气压·风）</div>'+
    '<div style="display:flex;align-items:baseline;gap:8px;margin-top:3px"><span style="font-size:22px;font-weight:800;color:'+(ns>=75?"#52c41a":ns>=60?"#6fd6e0":ns>=45?"#f59e0b":"#e06666")+'">'+ns+'</span><span style="font-size:12px;color:#8fa3c0">分 · '+nl+'</span></div>'+
    '<div style="font-size:11px;color:#b8c8e0;margin-top:3px;line-height:1.5">'+na+'</div>'+
+   (nd.level?'<div style="font-size:11px;color:#f59e0b;margin-top:4px">❄️ '+nd.label+'：19:00 '+nd.base.toFixed(0)+'℃ → 次日04:00 '+nd.last.toFixed(0)+'℃（累计降 '+nd.total.toFixed(1)+'℃，最大 '+nd.maxDrop.toFixed(1)+'℃/时）</div>':'')+
   '</div>';
 }
 function futureScore(dy,jqn){
@@ -685,6 +693,33 @@ function nightDo(hour,baseLow){
  return baseLow*(1-d);
 }
 function isNightHour(hour){return hour>=19||hour<5}
+/* 夜间降温速率：19:00→次日04:00 逐小时温度，累计降幅 + 最大小时降幅 */
+function nightDrop(hourly){
+ var r={maxDrop:0,at:"",total:0,base:null,last:null,level:0,label:""};
+ if(!hourly||!hourly.time||!hourly.temperature_2m)return r;
+ var t=hourly.time,v=hourly.temperature_2m,start=-1;
+ for(var i=0;i<t.length;i++){if(t[i].slice(11,16)==="19:00"){start=i;break}}
+ if(start<0||start+3>=t.length)return r;
+ var w=[];
+ for(var j=start;j<t.length&&w.length<10;j++){var x=parseFloat(v[j]);if(!isNaN(x))w.push({t:t[j].slice(11,16),v:x})}
+ if(w.length<4)return r;
+ r.base=w[0].v;r.last=w[w.length-1].v;
+ for(var k=1;k<w.length;k++){var d=w[k-1].v-w[k].v;if(d>r.maxDrop){r.maxDrop=d;r.at=w[k].t}}
+ r.total=r.base-r.last;
+ if(r.total>=5.5||(r.maxDrop>=2.5&&r.total>=3.5)){r.level=3;r.label="降温应激夜（快降）"}
+ else if(r.total>=4||r.maxDrop>=2){r.level=2;r.label="降温应激夜"}
+ else if(r.total>=2.5||r.maxDrop>=1.5){r.level=1;r.label="夜间缓降"}
+ return r;
+}
+function applyNightDrop(sc,hour,nd){
+ if(sc==null||!nd||nd.level<=0)return sc;
+ if(hour>=19||hour<5){
+  var adj=nd.level===3?-12:nd.level===2?-8:-3;
+  var cap=nd.level===3?58:nd.level===2?65:80;
+  return Math.min(cap,sc+adj);
+ }
+ return sc;
+}
 function hourScore(h,df,hour,shift){
  var s=60,p=parseFloat(h.p),hum=parseInt(h.hum),t=parseFloat(h.t),wn=parseInt(h.wind)||0,rain=parseFloat(h.rain)||0;
  if(isNaN(p)||isNaN(hum)||isNaN(t))return null;
@@ -714,10 +749,11 @@ function renderHourlyScore(x,today,shift){
  var box=document.getElementById("hourly_score");if(!box)return;
  var hd=x.hourly||{};
  var df=parseFloat(today.high)-parseFloat(today.low);
+ var nd=nightDrop(x.hourly);
  var arr=[];
  if(hd.time&&hd.temperature_2m)for(var i=0;i<Math.min(24,hd.time.length);i++){
   var sc=hourScore({p:hd.pressure_msl[i],hum:hd.relative_humidity_2m[i],t:hd.temperature_2m[i],wind:windLevel(hd.wind_speed_10m[i]),rain:hd.precipitation[i]},df,i,shift);
-  arr.push({h:i,s:sc});
+  arr.push({h:i,s:applyNightDrop(sc,i,nd)});
  }
  if(!arr.length){box.innerHTML="暂无逐小时数据";return;}
  var wins=goldWindows(arr);
@@ -738,9 +774,10 @@ function renderHourlyScore(x,today,shift){
  var nightHtml=nightWins.length?nightWins.map(function(g){return "<b style='color:#7d96d0'>"+fmtHour(nightArr[g[0]].h)+"-"+fmtHour(nightArr[g[1]].h+1)+"</b>（"+nightArr[g[0]].s+"~"+nightArr[g[1]].s+"分）"}).join(" · "):"暂无明确夜钓窗口，按夜间段高点 22 点前下竿";
  box.innerHTML='<div style="display:flex;align-items:flex-end;gap:2px;height:104px">'+bars+'</div>'+tline+
   '<div style="margin-top:8px">🕐 黄金窗口：'+winHtml+'</div>'+
-  '<div style="margin-top:5px">🌙 夜间段（深蓝底色 19-04点，溶氧按夜间下降曲线修正）：'+nightHtml+'</div>';
+  '<div style="margin-top:5px">🌙 夜间段（深蓝底色 19-04点，溶氧按夜间下降曲线修正）：'+nightHtml+'</div>'+
+  (nd.level?'<div style="margin-top:5px;color:#f59e0b">❄️ '+nd.label+'：19点 '+nd.base.toFixed(0)+'℃ → 次日4点 '+nd.last.toFixed(0)+'℃，累计降 '+nd.total.toFixed(1)+'℃（最大 '+nd.maxDrop.toFixed(1)+'℃/时），夜间段已同步扣分封顶</div>':'');
  var note=document.getElementById("hourly_note");
- if(note)note.textContent="逐小时鱼口分 = 气压/湿度/温差/风力/降水/水温/下层溶氧 加权估算，并含天气剧变检测（跨日气温/湿度/气压/风力变动扣分，剧变日封顶）+ 气压回压判定（须连续2天不降，单日回升不算回压），≥65 分视为黄金窗口；夜间段（19-04点）下层溶氧按夜间下降曲线修正（凌晨3-4点全天最低、跌破5mg/L 即扣分），避免凌晨低温误判高分；仅供参考，非实测。";
+ if(note)note.textContent="逐小时鱼口分 = 气压/湿度/温差/风力/降水/水温/下层溶氧 加权估算，并含天气剧变检测（跨日气温/湿度/气压/风力变动扣分，剧变日封顶）+ 气压回压判定（须连续2天不降，单日回升不算回压）+ 夜间降温速率检测（19点→次日4点累计降幅≥4℃ 或单小时≥2℃ 即判降温应激夜，夜间段扣分并封顶），≥65 分视为黄金窗口；夜间段（19-04点）下层溶氧按夜间下降曲线修正（凌晨3-4点全天最低、跌破5mg/L 即扣分），避免凌晨低温误判高分；仅供参考，非实测。";
 }
 function renderPressureTrend(x){
  var box=document.getElementById("pressure_svg");if(!box)return;
