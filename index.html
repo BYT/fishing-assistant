@@ -133,6 +133,7 @@ svg{width:100%;height:auto;display:block}
     </div>
     <div class="body" id="bait_calc">--</div>
   </div>
+  <div class="card"><h3>🥄 勺子舀法（省事版 · 5/7.5/15/30ml 勺）</h3><div class="body" id="bait_spoon">--</div></div>
   <div class="card"><h3>🧾 四套开饵单（不空军打底）</h3><div id="bait_plans"></div></div>
   <div class="card"><h3>配方详情</h3><div class="body" id="bait_full">--</div></div>
   <div class="card"><h3>成品状态要求</h3><div class="body" id="bait_state">--</div></div>
@@ -208,6 +209,11 @@ var BAITS=[
  {n:"🌙 夜钓饵单",s:"18点后 / 雨后 / 降温天",f:"不空军55% + 螺肉藻鲤15% + 六种肉20% + 饕餮盛宴5% + 蓝鲫青春版5% + 千里香指甲盖量",w:"总水量≈饵重0.9倍",u:"高蛋白浓腥，夜钓大板鲫、雨后降温开口；螺肉藻鲤先温水泡10分钟再拌；千里香穿透力强诱鱼进窝；夜钓近岸深浅交界贴底",st:"柔软蓬松 / 腥香浓 / 雾化中速 / 持钩性好",ad:"千里香每100g饵指甲盖量，宁少勿多，过量死窝",tm:"25℃以上：不空军60 + 螺肉藻鲤12 + 六种肉18 + 饕餮盛宴5 + 蓝鲫青春版5，千里香减半|15-25℃：用上方基准配方|8-15℃：不空军55 + 螺肉藻鲤10 + 六种肉25 + 饕餮盛宴5 + 蓝鲫青春版5|8℃以下：不空军57 + 螺肉藻鲤8 + 六种肉25 + 饕餮盛宴5 + 蓝鲫青春版5",dp:"浅水1.4-1.6m：水比0.85、饵团小、压雾化，杂鱼多就少抽频率|2m以上：水比0.9、搓大饵守底，千里香照常指甲盖量|夜里深水比浅水暖1-2℃，优先钓2m以上"},
  {n:"🎣 单钓鲫鱼",s:"纯鲫 · 去掉粗颗粒",f:"不空军57% + 六种肉25% + 疯钓鲫8% + 蓝鲫青春版10% + 苹果酸1-2滴",w:"总水量≈饵重0.9倍",u:"去掉饕餮盛宴的粗颗粒、不用螺肉藻鲤和鲜藻元素，免得招杂鱼；六种肉给足腥、蓝鲫青春版保拉丝；钩1-2号袖、0.4主线、0.2子线、10-12cm、调4钓2，饵团黄豆大小",st:"柔软蓬松 / 腥味集中 / 拉丝足 / 中慢雾化",ad:"苹果酸只用1-2滴，压住腥味就适得其反",tm:"25℃以上：不空军55 + 六种肉12 + 疯钓鲫8 + 蓝鲫青春版15 + 水果元素10|15-25℃：用上方基准配方|8-15℃：不空军55 + 六种肉30 + 疯钓鲫5 + 蓝鲫青春版10|8℃以下：不空军50 + 六种肉32 + 疯钓鲫8 + 蓝鲫青春版10，水0.95",dp:"浅水1.4-1.6m：水比0.85，饵团黄豆大小，拉饵改搓饵防杂鱼|2m左右：水比0.9，饵团花生米，子线仍10-12cm|2.5m以上：水比0.95、多打揉增加附钩，口轻就换小钩"},
  {n:"🐟 单钓鲤鱼",s:"纯鲤 · 螺味+薯甜+粗颗粒",f:"不空军55% + 螺肉藻鲤15% + 螺鲤三号12% + 饕餮盛宴13% + 六种肉5% + 红薯液5-8ml",w:"总水量≈饵重0.8倍（红薯液计入水量）",u:"螺味打底、薯甜提口、粗颗粒留窝；螺肉藻鲤先温水泡10分钟再拌；搓大饵守底不抽频率，钩5-8号伊势尼、0.8-1.5子线30-40cm、调钝抓黑漂走漂",st:"偏硬实 / 螺香薯甜 / 雾化慢 / 持钩性极好",ad:"小鱼闹窝把六种肉减到3%、搓更大饵",tm:"25℃以上：不空军50 + 螺肉藻鲤20 + 螺鲤三号15 + 饕餮盛宴10 + 六种肉5|15-25℃：用上方基准配方|8-15℃：不空军52 + 螺肉藻鲤18 + 螺鲤三号15 + 饕餮盛宴10 + 六种肉5|8℃以下：鲤鱼基本停口，改单钓鲫鱼",dp:"浅水1.4-1.6m：不守鲤，换到2m以上|2-2.5m：水比0.8，搓花生米到拇指大|2.5m以上：水比0.75-0.8，从饕餮盛宴里扣3-5%给螺鲤三号，比重更大"}
+];var SPOON=[
+ {rows:[["不空军","大勺 2 勺（30ml）"],["六种肉","中勺 1 勺（15ml）"],["饕餮盛宴","小勺 1 勺（7.5ml）"],["蓝鲫青春版","小勺 1 勺（7.5ml）"]]},
+ {rows:[["不空军","大勺 2 勺（30ml）"],["六种肉","中勺 1 勺（15ml）"],["螺肉藻鲤","中勺半勺（先温水泡开）"],["饕餮盛宴","手撮一小撮"],["蓝鲫青春版","手撮一小撮"]]},
+ {rows:[["不空军","大勺 2 勺（30ml）"],["六种肉","中勺 1 勺半"],["蓝鲫青春版","小勺 1 勺（7.5ml）"],["疯钓鲫","手撮一小撮"]]},
+ {rows:[["不空军","大勺 2 勺（30ml）"],["螺肉藻鲤","中勺半勺（先泡开）"],["饕餮盛宴","小勺 1 勺（7.5ml）"],["螺鲤三号","小勺 1 勺（7.5ml）"],["六种肉","手撮一小撮"]]}
 ];var selBait=2;
 try{var _sb=parseInt(localStorage.getItem("fa_bait"));if(!isNaN(_sb)&&_sb>=0&&_sb<BAITS.length)selBait=_sb;}catch(e){}
 var curTier=-1,curDepth=0,liveTempC=null;
@@ -227,7 +233,7 @@ function renderBaitAll(){
  document.getElementById("bait_state").textContent=b.st;
  var _adj=document.getElementById("bait_adj");
  if(_adj){var _h=b.ad;if(b.tm){_h+="<div style='margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,.12);line-height:1.8'><b>🌡 温度分档（按气温）</b><br>"+b.tm.split("|").join("<br>")+"</div>";}if(b.dp){_h+="<div style='margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.12);line-height:1.8'><b>💧 水深修正（按钓点水深）</b><br>"+b.dp.split("|").join("<br>")+"</div>";}_adj.innerHTML=_h;}
- renderCalc();renderTierBar();
+ renderCalc();renderTierBar();renderSpoon();
 }
 function tierByTemp(t){return t>=25?0:(t>=15?1:(t>=8?2:3))}
 function isNightNow(){var h=new Date().getHours();return h>=19||h<6}
@@ -694,6 +700,16 @@ function parseMix(f){
  return {items:items,ml:ml,mlName:mlName,drops:drops,dropName:dropName};
 }
 function waterRatio(w){var m=String(w).match(/(0\.\d+)倍/);return m?parseFloat(m[1]):0.9}
+function renderSpoon(){
+ var box=document.getElementById("bait_spoon");if(!box)return;
+ var sp=SPOON[selBait]||SPOON[0];
+ var h="<div style='font-size:12px;color:#8fa3c0;margin-bottom:8px;line-height:1.8'>勺具分工：<b style='color:#6fd6e0'>30ml 大勺</b>量不空军主饵 · <b style='color:#6fd6e0'>15ml 中勺</b>量六种肉/螺肉藻鲤 · <b style='color:#6fd6e0'>7.5ml 小勺</b>量蓝鲫青春版/饕餮盛宴/螺鲤三号 · <b style='color:#6fd6e0'>5ml 小份勺</b>量小份料与红薯液</div>";
+ h+="<table><tr><th>材料</th><th style='text-align:right'>省事舀法</th></tr>";
+ sp.rows.forEach(function(r){h+="<tr><td>"+r[0]+"</td><td style='text-align:right'><b>"+r[1]+"</b></td></tr>";});
+ h+="</table>";
+ h+="<div class='note' style='margin-top:8px'>⏱ 3 小时用量：拉饵 50-70g（约 7-9 勺），加水 45-63ml；搓饵守底 75-90g（约 10-12 勺），加水 68-81ml。开场窝料 1.5-2 勺即可，后续靠抽竿带饵。5% 小份料直接手撮，不用分零勺；每勺刮平不压实，最终以饵团柔软、能拉能搓为准。</div>";
+ box.innerHTML=h;
+}
 function renderCalc(){
  var box=document.getElementById("bait_calc");if(!box)return;
  var b=BAITS[selBait],inp=document.getElementById("bait_total");
